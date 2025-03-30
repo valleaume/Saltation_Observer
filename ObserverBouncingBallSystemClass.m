@@ -61,13 +61,13 @@ classdef ObserverBouncingBallSystemClass < HybridSystem
             v_obs = x(this.velocity_index_obs);
             % Define the value of the jump map g(x). 
             if (h <= 0) && (h_obs + this.k1*(h-h_obs) <= 0) 
-                 xplus = [h; -this.lambda*v + this.mu; h_obs + this.Ld_1*(h - h_obs); -this.lambda*v_obs + this.mu + this.Ld_2*(h - h_obs)];
+                 xplus = [0; -this.lambda*v + this.mu; h_obs + this.Ld_1*(h - h_obs); -this.lambda*v_obs + this.mu + this.Ld_2*(h - h_obs)];
             else
                 if h_obs + this.k1*(h-h_obs) <= 0 
                     xplus = [h; v; h_obs + this.Ld_1*(h - h_obs); -this.lambda*v_obs + this.mu + this.Ld_2*(h - h_obs)];
                 else
                     if h <= 0
-                        xplus = [h; -this.lambda*v + this.mu; h_obs; v_obs];
+                        xplus = [0; -this.lambda*v + this.mu; h_obs; v_obs];
                     end
                 end
             end
