@@ -47,7 +47,7 @@ classdef BouncingBallSubSystemClass < HybridSubsystem
             h = x(this.height_index);
             v = x(this.velocity_index);
             % Define the value of the jump map g(x). 
-            xplus = [h; -this.lambda*v + this.mu];
+            xplus = [0; -this.lambda*v + this.mu];
         end
         
         function inC = flowSetIndicator(this, x, u, t, j)
