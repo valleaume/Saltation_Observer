@@ -84,12 +84,17 @@ figure(4)
 
 e = sol('Ball').x - sol('Observer').x;
 P = eye(2);
-e_after = e(sign_jump==1,:);
-e_before = e(sign_jump==-1,:);
-plot(sol('Ball').t(sign_jump==-1), diag(e_before*P*e_before'), color='green');
+far_jump_mask = ~ismember(sol('Ball').t, sol.jump_times)';
+% Trying to get rid of spikes
+% Arbitrary treshold on velocity error to get rid of them
+far_jump_mask = (abs(e(:,2))<10)';
+e_after = e(sign_jump==1 & far_jump_mask,:);
+e_before = e(sign_jump==-1 & far_jump_mask,:);  
+
+plot(sol('Ball').t(sign_jump==-1 & far_jump_mask), diag(e_before*P*e_before'), color='green');
 hold on;
 grid on;
-plot(sol('Ball').t(sign_jump==1), diag(e_after*P*e_after'), color='red');
+plot(sol('Ball').t(sign_jump==1 & far_jump_mask), diag(e_after*P*e_after'), color='red');
 legend('Observer jumps before', 'Observer jumps after');
 xlabel('$t$', 'Interpreter', 'Latex')
 ylabel('$\|x-\hat{x}\|^2$',  'Interpreter', 'Latex')
