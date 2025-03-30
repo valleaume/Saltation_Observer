@@ -2,6 +2,7 @@ sys_ball = BouncingBallSubSystemClass();
 
 sys_obs = BouncingBallObserver();
 sys_obs.L_c = 4.85e-1*[1.4; 1.25];
+sys_obs.L_c = [0.8; 0.6];
 sys_obs.L_d = 1*[0.1; 0.1];
 
 sys_ball.mu = 0; % Additional velocity at each impact
