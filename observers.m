@@ -24,7 +24,7 @@ sys.setInput('Observer', obs_input);
 
 sys
 
-x0_cell = {[5; 2]; (1 - 0.0006)*[5; 2]};
+x0_cell = {[5; 2]; (1 - 0.6)*[5; 2]};
 tspan = [0, 250];
 jspan = [0, 2450];
 
