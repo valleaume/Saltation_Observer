@@ -7,7 +7,7 @@ classdef BouncingBallObserver < HybridSubsystem
         lambda = 0.8; % Coefficient of restitution.
         mu = 2;       % Coefficient of additive velocity.
         f_air = 0.01; % Coefficient of air friction.
-        k = 0;
+        k = [0; 0];
         L_c = [0.3; 0.1];
         L_d = [3; 10];
     end
@@ -59,17 +59,21 @@ classdef BouncingBallObserver < HybridSubsystem
             % Extract the state components.
             h = x(this.height_index);
             v = x(this.velocity_index);
-
+            x_c = [h; v] + this.k*(u-h);
+            h_c = x_c(1);
+            v_c = x_c(2);
             % Set 'inC' to 1 if 'x' is in the flow set and to 0 otherwise.
-            inC = (h >= 0) || (v >= 0);
+            inC = (h_c >= 0) || (v_c >= 0);
         end
         function inD = jumpSetIndicator(this, x, u, t, j)
             % Extract the state components.
             h = x(this.height_index);
             v = x(this.velocity_index);
-
+            x_c = [h; v] + this.k*(u-h);
+            h_c = x_c(1);
+            v_c = x_c(2);
             % Set 'inD' to 1 if 'x' is in the jump set and to 0 otherwise.
-            inD = (h <= 0) && (v <= 0); % We choose h <= 0 insead of h == 0 in order to better detect jumps. 
+            inD = (h_c <= 0) && (v_c <= 0); % We choose h <= 0 insead of h == 0 in order to better detect jumps. 
         end
     end
 end

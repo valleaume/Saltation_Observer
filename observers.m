@@ -53,7 +53,7 @@ hpb = HybridPlotBuilder().subplots('on')...
     .legend('$x_1$', '$x_2$')...
     .plotFlows(sol('Ball'));
   
-
+grid on;
 hold on
 hpb.subplots('on')...
     .flowColor('#FF8800')...
@@ -64,6 +64,19 @@ hpb.subplots('on')...
  
 
 figure(2)
+hpb = HybridPlotBuilder().subplots('on')...
+    .legend('$x$')...
+    .plotPhase(sol('Ball'));
+grid on;    
+hold on;
+hpb.subplots('on')...
+    .flowColor('#FF8800')...
+    .jumpColor('m')...
+    .jumpEndMarker('o')...
+    .legend('$\hat{x}$')...
+    .plotPhase(sol('Observer'))
+
+figure(3)
 
 plot(sol('Ball').t, sol('Ball').x(:,1) - sol('Observer').x(:,1));
 grid on;
@@ -72,7 +85,7 @@ ylabel('$x_1- \hat{x}_1$', Interpreter= 'latex');
 %legend('$x$', '$\hat{x}$',Interpreter = 'latex');
 %title( "Position error");
 
-figure(3)
+figure(4)
 
 plot(sol('Ball').t, sol('Ball').x(:,2) - sol('Observer').x(:,2));
 grid on;
@@ -80,7 +93,7 @@ xlabel('$t$', Interpreter= 'latex');
 ylabel('$x_2- \hat{x}_2$', Interpreter= 'latex');
 title( "Velocity error");
 
-figure(4)
+figure(5)
 
 e = sol('Ball').x - sol('Observer').x;
 P = eye(2);
@@ -100,7 +113,7 @@ xlabel('$t$', 'Interpreter', 'Latex')
 ylabel('$\|x-\hat{x}\|^2$',  'Interpreter', 'Latex')
 %title("Norm error");
 
-figure(5)
+figure(6)
 plot(sol('Ball').t, sol('Ball').j - sol("Observer").j);
 
 
