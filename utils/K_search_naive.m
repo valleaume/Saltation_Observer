@@ -1,3 +1,7 @@
+%%% Script searching for a stable L_d, L_c 
+% using naive gridsearch
+
+
 sys_ball = BouncingBallSubSystemClass();
 
 sys_obs = BouncingBallObserver();

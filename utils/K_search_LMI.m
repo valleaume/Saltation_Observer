@@ -1,3 +1,7 @@
+%%% Script searching for a stable L_d and its corresponding P given L_c
+
+%It is done using LMIs solving the matrix inequality of section IV 
+
 sys_ball = BouncingBallSubSystemClass();
 
 sys_obs = BouncingBallObserver();
