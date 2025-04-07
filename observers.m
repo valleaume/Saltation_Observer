@@ -34,6 +34,7 @@ sys
 max_dt_step = 0.1;
 config = HybridSolverConfig('AbsTol', 1e-3, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
 
+% X_0 is first element of cell, hat{X_0} is the second
 x0_cell = {[5; 2]; (1 - 0.6)*[5; 2]};
 tspan = [0, 250];
 jspan = [0, 2450];
