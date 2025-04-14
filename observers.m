@@ -17,7 +17,7 @@ sys_obs.lambda = sys_ball.lambda;
 sys_obs.f_air = sys_ball.f_air;
 
 % Choose the observer gains
-sys_obs.L_c = [0.8; 0.6];   % Flow gain
+sys_obs.L_c = [0.1; 0.25];   % Flow gain
 sys_obs.L_d = 1*[0.1; 0.1]; % Jump gain
 sys_obs.K = [0, 0];         % Gain on jump detection
 %BEWARE: K(1) < 0.5 is necessary to enforce transversality
@@ -35,7 +35,7 @@ max_dt_step = 0.1;
 config = HybridSolverConfig('AbsTol', 1e-3, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
 
 % X_0 is first element of cell, hat{X_0} is the second
-x0_cell = {[5; 2]; (1 - 0.6)*[5; 2]};
+x0_cell = {[5; 2]; (1 - 0.6e-4)*[5; 2]};
 tspan = [0, 250];
 jspan = [0, 2450];
 
@@ -91,6 +91,19 @@ hpb.subplots('on')...
     .jumpEndMarker('o')...
     .legend('$\hat{x}$')...
     .plotPhase(sol('Observer'))
+hold on;
+% Vector field
+x_ = -2:0.5:10; % Coordonnées en x
+y_ = -15:1:15; % Coordonnées en y
+
+[X, Y] = meshgrid(x_, y_); % Création de la grille
+U =   Y + 3*(0.0-X); % Composante x du vecteur
+V =  -sys_ball.gamma - sign(Y) .* sys_ball.f_air.*Y.^2;  % Composante y du vecteur
+
+% Tracé du champ de vecteurs
+quiver(X, Y, U, V);
+xlim([-2,10]);
+ylim([-15,15]);
 title('Phase Space', 'Interpreter', 'latex')
 
 % Plot position error
