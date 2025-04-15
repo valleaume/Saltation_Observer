@@ -7,9 +7,9 @@ classdef BouncingBallObserver < HybridSubsystem
         lambda = 0.8;       % Coefficient of restitution.
         mu = 2;             % Coefficient of additive velocity.
         f_air = 0.01;       % Coefficient of air friction.
-        K  = [0; 0];        % Linear correction terms applied to detect jumps
-        L_c = [0.3; 0.1];   %Flow gain of the observer
-        L_d = [3; 10];      %Jump/discrete gain of the observer
+        K  = [0, 0];        % Linear correction terms applied to detect jumps
+        L_c = [0.3; 0.1];   % Flow gain of the observer
+        L_d = [3; 10];      % Jump/discrete gain of the observer
     end
     
     % Define constant properties that cannot be modified (i.e., "immutable").
