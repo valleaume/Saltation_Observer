@@ -9,7 +9,7 @@ sys_ball.lambda = 1;    % Restitution coefficient
 sys_ball.f_air = 0;     % Friction 
 
 % Define the observer subsystem
-sys_obs = BouncingBallObserver();
+sys_obs = BouncingBallKallmanObserver();
 
 % Its dynamic is a copy of the plant's dynamic
 sys_obs.mu = sys_ball.mu;
@@ -17,6 +17,10 @@ sys_obs.lambda = sys_ball.lambda;
 sys_obs.f_air = sys_ball.f_air;
 
 % Choose the observer gains
+sys_obs.gain = 0.23;
+sys_obs.lambda_kallman = 0.9;
+sys_obs.gamma_kallman = 0.3;
+
 sys_obs.L_c = [0.1; 0.25];   % Flow gain
 sys_obs.L_d = 1*[0.1; 0.1]; % Jump gain
 sys_obs.K = [0, 0];         % Gain on jump detection
@@ -35,8 +39,8 @@ max_dt_step = 0.1;
 config = HybridSolverConfig('AbsTol', 1e-3, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
 
 % X_0 is first element of cell, hat{X_0} is the second
-x0_cell = {[5; 2]; (1 - 0.6e-4)*[5; 2]};
-tspan = [0, 250];
+x0_cell = {[1; 2]; (1 - 0.6e0)*[1; 2; reshape(eye(2), [4,1])]};
+tspan = [0, 25];
 jspan = [0, 2450];
 
 %% Solve coupled system 
@@ -76,7 +80,7 @@ hpb.subplots('on')...
     .jumpColor('m')...
     .jumpEndMarker('o')...
     .legend('$\hat{x}_1$', '$\hat{x}_2$')...
-    .plotFlows(sol('Observer'))
+    .plotFlows(sol('Observer').select(1:2))
  
 % Plot Phase
 figure(2)
@@ -90,14 +94,14 @@ hpb.subplots('on')...
     .jumpColor('m')...
     .jumpEndMarker('o')...
     .legend('$\hat{x}$')...
-    .plotPhase(sol('Observer'))
+    .plotPhase(sol('Observer').select(1:2))
 hold on;
 % Vector field
 x_ = -2:0.5:10; % Coordonnées en x
 y_ = -15:1:15; % Coordonnées en y
 
 [X, Y] = meshgrid(x_, y_); % Création de la grille
-U =   Y + 3*(0.0-X); % Composante x du vecteur
+U =   Y ; %+ 3*(0.0-X); % Composante x du vecteur, can put a K
 V =  -sys_ball.gamma - sign(Y) .* sys_ball.f_air.*Y.^2;  % Composante y du vecteur
 
 % Tracé du champ de vecteurs
@@ -124,7 +128,7 @@ title( "Velocity error");
 
 % Pot norm of error
 figure(5)
-e = sol('Ball').x - sol('Observer').x;
+e = sol('Ball').x - sol('Observer').x(:,1:2);
 P = eye(2);  %Here you can put a P calculated in K_search_LMI 
 far_jump_mask = ~ismember(sol('Ball').t, sol.jump_times)';
 % Trying to get rid of spikes
