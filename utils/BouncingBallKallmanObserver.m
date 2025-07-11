@@ -82,14 +82,14 @@ classdef BouncingBallKallmanObserver < HybridSubsystem
             w = [1; 0];
             J = [1, 0; 0, -this.lambda];
             % saltation matrix
-            salt_before = J - (J*f- f_plus )/v*w';
+            salt_before = J - (J*f - f_plus )/v*w';
             %salt_after = M_before - sys_obs.L_d*H*(sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) - sys_ball.flowMap(x, 0, 0, 0))/v*w';  saltation of initial system, after same as before
             % Define the value of the jump map g(x). 
             K_d = P*H'/(H*P*H'+ R_d);
 
-            P_plus = 1/this.gamma_kallman*salt_before*(eye(2)-K_d*H)*P*salt_before';
+            P_plus = 1/this.gamma_kallman*salt_before*P*salt_before'; % 1/this.gamma_kallman*salt_before*(eye(2)-K_d*H)*P*salt_before';
 
-            x_plus_partial = [h; -this.lambda*v + this.mu] + J*K_d*(u - h);
+            x_plus_partial = [h; -this.lambda*v + this.mu] ;%+ J*K_d*(u - h);
             xplus = [x_plus_partial; reshape(P_plus, [4,1])];
         end
         

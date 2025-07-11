@@ -18,8 +18,8 @@ sys_obs.f_air = sys_ball.f_air;
 
 % Choose the observer gains
 sys_obs.gain = 0.23;
-sys_obs.lambda_kallman = 0.9;
-sys_obs.gamma_kallman = 0.3;
+sys_obs.lambda_kallman = 0.4;
+sys_obs.gamma_kallman = 1;
 
 sys_obs.L_c = [0.1; 0.25];   % Flow gain
 sys_obs.L_d = 1*[0.1; 0.1]; % Jump gain
@@ -39,8 +39,8 @@ max_dt_step = 0.1;
 config = HybridSolverConfig('AbsTol', 1e-3, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
 
 % X_0 is first element of cell, hat{X_0} is the second
-x0_cell = {[1; 2]; (1 - 0.6e0)*[1; 2; reshape(eye(2), [4,1])]};
-tspan = [0, 25];
+x0_cell = {[1; 2]; (1 - 0.6e0)*[1; -2; reshape(eye(2), [4,1])]};
+tspan = [0, 50];
 jspan = [0, 2450];
 
 %% Solve coupled system 
@@ -146,8 +146,47 @@ xlabel('$t$', 'Interpreter', 'Latex')
 ylabel('$\|x-\hat{x}\|^2$',  'Interpreter', 'Latex')
 title("Norm error");
 
-% Plot who jump first using j
+% Plot norm of error
 figure(6)
+e = sol('Ball').x - sol('Observer').x(:,1:2);
+
+far_jump_mask = ~ismember(sol('Ball').t, sol.jump_times)';
+disp(size(far_jump_mask))
+% Trying to get rid of spikes
+% Arbitrary treshold on velocity error to get rid of them
+far_jump_mask = (abs(e(:,2))<10)';
+
+
+e_shaped = reshape(e, 2, 1, []);
+
+
+P_t =  reshape( sol('Observer').x(:,3:6)', 2, 2, []);
+P_inv_t = 1/(P_t(1,1,:).*P_t(2,2,:) -  P_t(1,2,:).*P_t(2,1,:)).*[P_t(2,2,:),-P_t(2,1,:) ; -P_t(1,2,:), P_t(1,1,:) ];
+
+P_t = P_inv_t;
+
+disp(P_t(:,:,1))
+disp(size(pagemtimes(pagemtimes(permute(e_shaped, [2,1,3]), P_t), e_shaped)))
+e_normed = reshape(pagemtimes(pagemtimes(permute(e_shaped, [2,1,3]), P_t), e_shaped), [], 1);
+
+e_normed_no_jump = e_normed(~far_jump_mask,:);
+
+hold on;
+grid on;
+
+scatter(sol('Ball').t(~far_jump_mask), e_normed_no_jump, color='red'); 
+
+plot(sol('Ball').t, reshape(P_t(1,1,:).^2 + P_t(2,2,:).^2 + P_t(2,1,:).^2+ P_t(1,2,:).^2, [],1)) % l2 norm
+legend('Observer jumps before', 'Observer jumps after', 'L_2 norm of \Pi');
+xlabel('$t$', 'Interpreter', 'Latex')
+ylabel('$\|x-\hat{x}\|^2$',  'Interpreter', 'Latex')
+%plot(sol('Ball').t, reshape(P_t(1,1,:).^2 + P_t(2,2,:).^2 + P_t(2,1,:).^2+ P_t(1,2,:).^2, [],1))
+%plot(sol('Ball').t, reshape(P_t(1,1,:).*P_t(2,2,:) -  P_t(1,2,:).*P_t(2,1,:), [],1)) det
+%plot(sol('Ball').t, reshape( P_t(1,2,:)- P_t(2,1,:), [],1))  symmetric?
+title("Lyapunov function $(x-\hat{x})^t\Pi(x-\hat{x})$ over time", 'Interpreter', 'Latex');
+
+% Plot who jump first using j
+figure(7)
 plot(sol('Ball').t, sol('Ball').j - sol("Observer").j);
 
 %% Compute M_before, M_after
