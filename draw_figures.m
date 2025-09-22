@@ -120,7 +120,7 @@ obs_input = @(y_ball, ~) y_ball;
 sys_stable.setInput('Observer', obs_input);
 
 x0_cell = {[5; 2]; (1 - 6e-2)*[5; 2]};
-sol_synchronized = sys_stable.solve(x0_cell, tspan, jspan, config);
+sol_stable = sys_stable.solve(x0_cell, tspan, jspan, config);
 
 
 %% Plot position error
