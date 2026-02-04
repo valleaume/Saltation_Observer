@@ -1,17 +1,19 @@
 # Saltation_Observer
-Work in progress for Hybrid Observer showing the impact of the saltation matrices on a linear observer. We show the importance of the transversality hypothesis alongside the contractivness of two matrices : $M_{\rm before}$ and $M_{\rm after}$
+Work in progress for Hybrid Observer showing the impact of the saltation matrices on a linear observer. We show the importance of the transversality hypothesis alongside the contractivness of two matrices : $M_{\rm before}$ and $M_{\rm after}$. 
+
+Related paper : [Saltation-Based analysis of estimation error in observers for hybrid systems with unknown jump times](https://ieeexplore.ieee.org/document/11312843)
 
 ## Requirements
 Requires MATLAB 2024b or higher, the [Hybrid Equations Toolbox](https://mathworks.com/matlabcentral/fileexchange/41372-hybrid-equations-toolbox) package.
 
 ## Content
 
-The observers.m file is the main script.\
-draw_figures.m reproduces all figures of the paper.
+The `observers.m` file is the main script.\
+`draw_figures.m` reproduces all figures of the [paper](https://hal.parisnanterre.fr/ENSMP_CAS/hal-05273106).
 
-The /utils folder contains mutiple class definitions.
-- BouncingBallSubSystem is a class modelizing bouncing ball as a HybridSubSystem.
-- BouncingBallObserver is a class modelizing the constant gain observer as a HybridSubSystem.
+The `/utils` folder contains mutiple class definitions.
+- `BouncingBallSubSystem` is a class modelizing bouncing ball as a `HybridSubSystem`.
+- `BouncingBallObserver` is a class modelizing the constant gain observer as a `HybridSubSystem`.
 - Both K_search files look for appropriate gains regarding the spectral radius of both matrices. One does so by solving LMI while the other performs a naive gridsearch.
 
 ## Examples of interest 
