@@ -13,6 +13,7 @@ classdef BouncingBallKallmanObserver < HybridSubsystem
         gain = 0.2;
         L_c = [0.3; 0.1];   % Flow gain of the observer
         L_d = [3; 10];      % Jump/discrete gain of the observer
+        salted = true;      % Whether to use the saltation correction
     end
     
     % Define constant properties that cannot be modified (i.e., "immutable").
@@ -87,7 +88,11 @@ classdef BouncingBallKallmanObserver < HybridSubsystem
             % Define the value of the jump map g(x). 
             K_d = P*H'/(H*P*H'+ R_d);
 
-            P_plus = 1/this.gamma_kallman*salt_before*P*salt_before'; % 1/this.gamma_kallman*salt_before*(eye(2)-K_d*H)*P*salt_before';
+            if this.salted
+                P_plus = 1/this.gamma_kallman*salt_before*P*salt_before'; % 1/this.gamma_kallman*salt_before*(eye(2)-K_d*H)*P*salt_before';
+            else
+                P_plus = P;
+            end
 
             x_plus_partial = [h; -this.lambda*v + this.mu] ;%+ J*K_d*(u - h);
             xplus = [x_plus_partial; reshape(P_plus, [4,1])];

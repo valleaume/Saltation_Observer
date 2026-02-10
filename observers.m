@@ -21,6 +21,23 @@ sys_obs.gain = 0.23;
 sys_obs.lambda_kallman = 0.4;
 sys_obs.gamma_kallman = 1;
 
+% Define the observer subsystem, regular kallman
+sys_obs_ref = BouncingBallKallmanObserver();
+
+% Its dynamic is a copy of the plant's dynamic
+sys_obs_ref.mu = sys_ball.mu;
+sys_obs_ref.lambda = sys_ball.lambda;
+sys_obs_ref.f_air = sys_ball.f_air;
+
+% Choose the observer gains
+sys_obs_ref.gain = sys_obs.gain ;
+sys_obs_ref.lambda_kallman = sys_obs.lambda_kallman ;
+sys_obs_ref.gamma_kallman = sys_obs.gamma_kallman;
+
+% Deactivate saltation
+sys_obs_ref.salted = false;
+
+% Keep old gains for static gain observer
 sys_obs.L_c = [0.1; 0.25];   % Flow gain
 sys_obs.L_d = 1*[0.1; 0.1]; % Jump gain
 sys_obs.K = [0, 0];         % Gain on jump detection
@@ -28,9 +45,11 @@ sys_obs.K = [0, 0];         % Gain on jump detection
 
 
 % Define the coupled observerver-plant system 
-sys = CompositeHybridSystem('Ball', sys_ball, 'Observer', sys_obs);
+sys = CompositeHybridSystem('Ball', sys_ball, 'Observer', sys_obs, 'Kallman_Ref', sys_obs_ref);
 obs_input = @(y_ball, ~) y_ball;
 sys.setInput('Observer', obs_input);
+
+sys.setInput('Kallman_Ref', obs_input);
 
 sys
 
@@ -39,7 +58,7 @@ max_dt_step = 0.1;
 config = HybridSolverConfig('AbsTol', 1e-3, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
 
 % X_0 is first element of cell, hat{X_0} is the second
-x0_cell = {[1; 2]; (1 - 0.6e0)*[1; -2; reshape(eye(2), [4,1])]};
+x0_cell = {[1; 2]; (1 - 0.6e0)*[1; -2; reshape(eye(2), [4,1])]; (1 - 0.6e0)*[1; -2; reshape(eye(2), [4,1])]};
 tspan = [0, 50];
 jspan = [0, 2450];
 
@@ -81,6 +100,13 @@ hpb.subplots('on')...
     .jumpEndMarker('o')...
     .legend('$\hat{x}_1$', '$\hat{x}_2$')...
     .plotFlows(sol('Observer').select(1:2))
+hold on
+hpb.subplots('on')...
+    .flowColor('#168f2a')...
+    .jumpColor('m')...
+    .jumpEndMarker('x')...
+    .legend('$\hat{x}^k_1$', '$\hat{x}^k_2$')...
+    .plotFlows(sol('Kallman_Ref').select(1:2))
  
 % Plot Phase
 figure(2)
@@ -154,9 +180,10 @@ far_jump_mask = ~ismember(sol('Ball').t, sol.jump_times)';
 disp(size(far_jump_mask))
 % Trying to get rid of spikes
 % Arbitrary treshold on velocity error to get rid of them
-far_jump_mask = (abs(e(:,2))<10)';
+far_jump_mask = (abs(e(:,2))<5)';
 
-
+plot(sol('Ball').t(far_jump_mask), e(far_jump_mask,1).^2 + e(far_jump_mask,1).^2, color='magenta'); 
+hold on;
 e_shaped = reshape(e, 2, 1, []);
 
 
@@ -169,15 +196,16 @@ disp(P_t(:,:,1))
 disp(size(pagemtimes(pagemtimes(permute(e_shaped, [2,1,3]), P_t), e_shaped)))
 e_normed = reshape(pagemtimes(pagemtimes(permute(e_shaped, [2,1,3]), P_t), e_shaped), [], 1);
 
-e_normed_no_jump = e_normed(~far_jump_mask,:);
+e_normed_no_jump = e_normed(far_jump_mask,:);
+
+
+scatter(sol('Ball').t(far_jump_mask), e_normed_no_jump, color='red'); 
 
 hold on;
 grid on;
 
-scatter(sol('Ball').t(~far_jump_mask), e_normed_no_jump, color='red'); 
-
 plot(sol('Ball').t, reshape(P_t(1,1,:).^2 + P_t(2,2,:).^2 + P_t(2,1,:).^2+ P_t(1,2,:).^2, [],1)) % l2 norm
-legend('Observer jumps before', 'Observer jumps after', 'L_2 norm of \Pi');
+legend('Observer error', 'Lyapunov Error', 'L_2 norm of \Pi');
 xlabel('$t$', 'Interpreter', 'Latex')
 ylabel('$\|x-\hat{x}\|^2$',  'Interpreter', 'Latex')
 %plot(sol('Ball').t, reshape(P_t(1,1,:).^2 + P_t(2,2,:).^2 + P_t(2,1,:).^2+ P_t(1,2,:).^2, [],1))
