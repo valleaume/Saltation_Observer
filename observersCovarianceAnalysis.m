@@ -42,7 +42,7 @@ sys_obs_ref.gamma_kallman = 1;
 sys_obs_ref.salted = false;
 
 
-% Define the coupled observerver-plant system 
+%% Define the coupled observerver-plant system 
 sys = CompositeHybridSystem('Ball', sys_ball, 'Observer', sys_obs, 'Kallman_Ref', sys_obs_ref);
 obs_input = @(y_ball, ~) y_ball;
 sys.setInput('Observer', obs_input);
@@ -52,10 +52,10 @@ sys.setInput('Kallman_Ref', obs_input);
 sys
 
 % Define solver's parameter
-max_dt_step = 0.1;
-config = HybridSolverConfig('AbsTol', 1e-3, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
+max_dt_step = 0.05;
+config = HybridSolverConfig('AbsTol', 1e-4, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
 
-% Generate random points
+%% Generate random points
 mu = [1; 2];          % Mean vector (expectation)
 sigma = 1e-5*[2 0;       % Covariance matrix
          0 2];
@@ -76,28 +76,62 @@ title('Initial distribution of points (t=0)');
 axis equal;
 grid on;
 
-data = {};
+%% Propagate those points
+
+disp('Solving for those initial conditions')
+data_x = {};
 data_t = {};
 data_v = {};
-observer_jumps_before = zeros(1, n);
+observer_jumps_before = {};
 
 
-for index = 1:n
+for index = 1:10
     % X_0 is first element of cell, hat{X_0} is the second
     x0_cell = {[1; 2]; [points(index, 1); points(index, 2)]; [points(index, 1); points(index, 2); reshape(eye(2), [4,1])]};
     tspan = [0, 2];
     jspan = [0, 15];
+
     % Solve coupled system 
     sol = sys.solve(x0_cell, tspan, jspan, config);
-    data{end+1}  = sol('Observer').x(:,1);
+    data_x{end+1}  = sol('Observer').x(:,1);
     data_v{end+1}  = sol('Observer').x(:,2);
     data_t{end+1} = sol('Observer').t;
 
+    
+    mask_jump_after = (sol('Ball').j - sol("Observer").j) > 0;
+    mask_jump_before = (sol('Ball').j - sol("Observer").j) < 0;
+    sign_jump = zeros(1,length(mask_jump_after));
+    for i=2:length(mask_jump_after)
+        if mask_jump_before(i)
+            sign_jump(i) = +1;
+        else
+            if mask_jump_after(i)
+                sign_jump(i) = -1;
+            else
+                sign_jump(i) = sign_jump(i-1);
+            end
+        end
+    end
+    observer_jumps_before{end+1} = sign_jump;
 end
 
-data = cell2mat(data);
+%{  
+one big matrix, not really better for indexing 
+
+data = cat(3, data{:});
+[rows, cols, depths] = size(data);
+disp([rows, cols, depths])
+pos_indices = sub2ind([rows, cols, depths], j_mat, 1, 1:depths);
+velocity_indices = sub2ind([rows, cols, depths], j_mat, 2, 1:depths);
+jump_indices = sub2ind([rows, depths], j_mat, 1:depths);
+%}
+
+
+data_x = cell2mat(data_x);
 data_t = cell2mat(data_t);
-data_v = cell2mat(data_v)
+data_v = cell2mat(data_v);
+data_jumps = cell2mat(observer_jumps_before);
+
 
 x0_cell = {[1; 2]; [points(index, 1); points(index, 2)]; [points(index, 1); points(index, 2); reshape(eye(2), [4,1])]};
 tspan = [0, 25];
@@ -132,17 +166,21 @@ hpb.subplots('on')...
 
 data;
 
+function linear_indices = indices_from_time(t, data_t, data_x)
+    differences = abs(data_t - t);
+    [~, j_mat] = min(differences, [], 1);
+
+    [rows, cols] = size(data_x);
+    linear_indices = sub2ind([rows, cols], j_mat, 1:cols);
+end
+
 % Plot the points distribution before a jump
-t_before = 0.66;
-differences = abs(data_t - t_before);
-[~, j_mat] = min(differences, [], 1);
-disp(j_mat);
+t_before = 0.69;
+linear_indices = indices_from_time(t_before, data_t, data_x);
 
-[rows, cols] = size(data);
-linear_indices = sub2ind([rows, cols], j_mat, 1:cols);
-
-figure(3);
-scatter(data(linear_indices), data_v(linear_indices), 'filled');
+figure(3)
+scatter(data_x(linear_indices), data_v(linear_indices), [], data_jumps(linear_indices), 'filled');
+colormap('jet');
 xlabel('x');
 ylabel('v');
 title(sprintf('Distribution of points before jump (t=%.2f)', t_before));
@@ -150,19 +188,15 @@ axis equal;
 grid on;
 
 % Plot the points after a jump
-t_after = 0.74;
-differences = abs(data_t - t_after);
-[~, j_mat] = min(differences, [], 1);
-disp(j_mat);
+t_after = 0.71;
+linear_indices = indices_from_time(t_after, data_t, data_x);
 
-[rows, cols] = size(data);
-linear_indices = sub2ind([rows, cols], j_mat, 1:cols);
-
-%disp(data(linear_indices))  for test purposes, 41
-%disp(data(41,:))
+%disp(data_x(linear_indices))  for test purposes, 41
+%disp(data_x(41,:))
 
 figure(4);
-scatter(data(linear_indices), data_v(linear_indices), 'filled');
+scatter(data_x(linear_indices), data_v(linear_indices), [], data_jumps(linear_indices), 'filled');
+colormap('jet');
 xlabel('x');
 ylabel('v');
 title(sprintf('Distribution of points after jump (t=%.2f)', t_after));
@@ -171,16 +205,12 @@ grid on;
 
 % Plot the points before second jump
 t_after = 1.67;
-differences = abs(data_t - t_after);
-[~, j_mat] = min(differences, [], 1);
-disp(j_mat);
-
-[rows, cols] = size(data);
-linear_indices = sub2ind([rows, cols], j_mat, 1:cols);
+linear_indices = indices_from_time(t_after, data_t, data_x);
 
 
 figure(5);
-scatter(data(linear_indices), data_v(linear_indices), 'filled');
+scatter(data_x(linear_indices), data_v(linear_indices), [], data_jumps(linear_indices), 'filled');
+colormap('jet');
 xlabel('x');
 ylabel('v');
 title(sprintf('Distribution of points before 2nd jump (t=%.2f)', t_after));
