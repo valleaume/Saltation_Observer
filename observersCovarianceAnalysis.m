@@ -1,6 +1,9 @@
 addpath('utils');
 close all;
 
+GENERATE_POINTS = true;
+data_to_load = 'raw-bouncing-ball-11-Feb-2026.mat';
+
 % Define the plant subsystem
 sys_ball = BouncingBallSubSystemClass();
 
@@ -52,86 +55,98 @@ sys.setInput('Kallman_Ref', obs_input);
 sys
 
 % Define solver's parameter
-max_dt_step = 0.05;
+max_dt_step = 0.01;
 config = HybridSolverConfig('AbsTol', 1e-4, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
 
-%% Generate random points
-mu = [1; 2];          % Mean vector (expectation)
-sigma = 1e-5*[2 0;       % Covariance matrix
-         0 2];
+if GENERATE_POINTS
 
-% Number of random points to generate
-n = 1000;
+    % Number of random points to generate
+    n = 3000;
 
-% Generate random points
-rng('default'); % For reproducibility (optional)
-points = mvnrnd(mu, sigma, n);
+    mu = [1; 2];          % Mean vector (expectation)
+    sigma = 1e-5*[2 0; 0 2];      % Covariance matrix
 
-% Plot the initial conditions
-figure(1);
-scatter(points(:,1), points(:,2), 'filled');
-xlabel('x');
-ylabel('v');
-title('Initial distribution of points (t=0)');
-axis equal;
-grid on;
+    % Generate random points
+    rng('default'); % For reproducibility (optional)
+    points = mvnrnd(mu, sigma, n);
 
-%% Propagate those points
-
-disp('Solving for those initial conditions')
-data_x = {};
-data_t = {};
-data_v = {};
-observer_jumps_before = {};
+    % Plot the initial conditions
+    figure(1);
+    scatter(points(:,1), points(:,2), 'filled');
+    xlabel('x');
+    ylabel('v');
+    title('Initial distribution of points (t=0)');
+    axis equal;
+    grid on;
 
 
-for index = 1:10
-    % X_0 is first element of cell, hat{X_0} is the second
-    x0_cell = {[1; 2]; [points(index, 1); points(index, 2)]; [points(index, 1); points(index, 2); reshape(eye(2), [4,1])]};
-    tspan = [0, 2];
-    jspan = [0, 15];
+    % Propagate those points
+    disp('Solving for those initial conditions')
+    data_x = {};
+    data_t = {};
+    data_v = {};
+    observer_jumps_before = {};
 
-    % Solve coupled system 
-    sol = sys.solve(x0_cell, tspan, jspan, config);
-    data_x{end+1}  = sol('Observer').x(:,1);
-    data_v{end+1}  = sol('Observer').x(:,2);
-    data_t{end+1} = sol('Observer').t;
+    for index = 1:n
+        % X_0 is first element of cell, hat{X_0} is the second
+        x0_cell = {[1; 2]; [points(index, 1); points(index, 2)]; [points(index, 1); points(index, 2); reshape(eye(2), [4,1])]};
+        tspan = [0, 2];
+        jspan = [0, 15];
 
-    
-    mask_jump_after = (sol('Ball').j - sol("Observer").j) > 0;
-    mask_jump_before = (sol('Ball').j - sol("Observer").j) < 0;
-    sign_jump = zeros(1,length(mask_jump_after));
-    for i=2:length(mask_jump_after)
-        if mask_jump_before(i)
-            sign_jump(i) = +1;
-        else
-            if mask_jump_after(i)
-                sign_jump(i) = -1;
+        % Solve coupled system 
+        sol = sys.solve(x0_cell, tspan, jspan, config);
+        data_x{end+1}  = sol('Observer').x(:,1);
+        data_v{end+1}  = sol('Observer').x(:,2);
+        data_t{end+1} = sol('Observer').t;
+
+        
+        mask_jump_after = (sol('Ball').j - sol("Observer").j) > 0;
+        mask_jump_before = (sol('Ball').j - sol("Observer").j) < 0;
+        sign_jump = zeros(1,length(mask_jump_after));
+        for i=2:length(mask_jump_after)
+            if mask_jump_before(i)
+                sign_jump(i) = +1;
             else
-                sign_jump(i) = sign_jump(i-1);
+                if mask_jump_after(i)
+                    sign_jump(i) = -1;
+                else
+                    sign_jump(i) = sign_jump(i-1);
+                end
             end
         end
+        observer_jumps_before{end+1} = sign_jump;
     end
-    observer_jumps_before{end+1} = sign_jump;
-end
 
-%{  
-one big matrix, not really better for indexing 
+    %{  
+    one big matrix, not really better for indexing 
 
-data = cat(3, data{:});
-[rows, cols, depths] = size(data);
-disp([rows, cols, depths])
-pos_indices = sub2ind([rows, cols, depths], j_mat, 1, 1:depths);
-velocity_indices = sub2ind([rows, cols, depths], j_mat, 2, 1:depths);
-jump_indices = sub2ind([rows, depths], j_mat, 1:depths);
-%}
+    data = cat(3, data{:});
+    [rows, cols, depths] = size(data);
+    disp([rows, cols, depths])
+    pos_indices = sub2ind([rows, cols, depths], j_mat, 1, 1:depths);
+    velocity_indices = sub2ind([rows, cols, depths], j_mat, 2, 1:depths);
+    jump_indices = sub2ind([rows, depths], j_mat, 1:depths);
+    %}
 
 
-data_x = cell2mat(data_x);
-data_t = cell2mat(data_t);
-data_v = cell2mat(data_v);
-data_jumps = cell2mat(observer_jumps_before);
+    data_x = cell2mat(data_x);
+    data_t = cell2mat(data_t);
+    data_v = cell2mat(data_v);
+    data_jumps = cell2mat(observer_jumps_before);
 
+    % Save dataset
+    today = string(datetime("today"));
+    datas_filename = strcat('data/raw-bouncing-ball-', today);
+    save(datas_filename, "data_x", "data_v", "data_t", "data_jumps")  
+
+else
+    % Load previously computed points
+    dataset = load("data/"+data_to_load);
+    data_x = dataset.data_x;
+    data_v = dataset.data_v;
+    data_t = dataset.data_t;
+    data_jumps = dataset.data_jumps;
+end 
 
 x0_cell = {[1; 2]; [points(index, 1); points(index, 2)]; [points(index, 1); points(index, 2); reshape(eye(2), [4,1])]};
 tspan = [0, 25];
@@ -166,6 +181,7 @@ hpb.subplots('on')...
 
 data;
 
+%% Define auxiliary function
 function linear_indices = indices_from_time(t, data_t, data_x)
     differences = abs(data_t - t);
     [~, j_mat] = min(differences, [], 1);
@@ -174,7 +190,7 @@ function linear_indices = indices_from_time(t, data_t, data_x)
     linear_indices = sub2ind([rows, cols], j_mat, 1:cols);
 end
 
-% Plot the points distribution before a jump
+%% Plot the points distribution before a jump
 t_before = 0.69;
 linear_indices = indices_from_time(t_before, data_t, data_x);
 
