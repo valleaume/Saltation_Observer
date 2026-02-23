@@ -1,7 +1,7 @@
 addpath('utils');
 close all;
 
-GENERATE_POINTS = true;
+GENERATE_POINTS = false;
 data_to_load = 'raw-bouncing-ball-11-Feb-2026.mat';
 
 % Define the plant subsystem
@@ -55,7 +55,7 @@ sys.setInput('Kallman_Ref', obs_input);
 sys
 
 % Define solver's parameter
-max_dt_step = 0.01;
+max_dt_step = 0.05;
 config = HybridSolverConfig('AbsTol', 1e-4, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
 
 if GENERATE_POINTS
@@ -99,9 +99,8 @@ if GENERATE_POINTS
         data_v{end+1}  = sol('Observer').x(:,2);
         data_t{end+1} = sol('Observer').t;
 
-        
-        mask_jump_after = (sol('Ball').j - sol("Observer").j) > 0;
-        mask_jump_before = (sol('Ball').j - sol("Observer").j) < 0;
+        mask_jump_after = (sol('Ball').j - sol('Observer').j) > 0;
+        mask_jump_before = (sol('Ball').j - sol('Observer').j) < 0;
         sign_jump = zeros(1,length(mask_jump_after));
         for i=2:length(mask_jump_after)
             if mask_jump_before(i)
@@ -192,10 +191,10 @@ end
 
 %% Plot the points distribution before a jump
 t_before = 0.69;
-linear_indices = indices_from_time(t_before, data_t, data_x);
+linear_indices_before = indices_from_time(t_before, data_t, data_x);
 
 figure(3)
-scatter(data_x(linear_indices), data_v(linear_indices), [], data_jumps(linear_indices), 'filled');
+scatter(data_x(linear_indices_before), data_v(linear_indices_before), [], data_jumps(linear_indices_before), 'filled');
 colormap('jet');
 xlabel('x');
 ylabel('v');
@@ -204,14 +203,14 @@ axis equal;
 grid on;
 
 % Plot the points after a jump
-t_after = 0.71;
-linear_indices = indices_from_time(t_after, data_t, data_x);
+t_after = 0.73;
+linear_indices_after = indices_from_time(t_after, data_t, data_x);
 
 %disp(data_x(linear_indices))  for test purposes, 41
 %disp(data_x(41,:))
 
 figure(4);
-scatter(data_x(linear_indices), data_v(linear_indices), [], data_jumps(linear_indices), 'filled');
+scatter(data_x(linear_indices_after), data_v(linear_indices_after), [], data_jumps(linear_indices_after), 'filled');
 colormap('jet');
 xlabel('x');
 ylabel('v');
@@ -232,3 +231,69 @@ ylabel('v');
 title(sprintf('Distribution of points before 2nd jump (t=%.2f)', t_after));
 axis equal;
 grid on;
+
+%% Saltation matrices 1rst jump
+
+F = [0, 1; 0, 0];
+J = [1, 0; 0, -sys_ball.lambda];
+
+H = [1, 0];
+w = [1; 0];
+
+x = [0; -4.85];
+M_before = J - sys_obs.L_d*H - (J*sys_ball.flowMap(x, 0, 0, 0) - sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) )/x(2)*w';
+M_after = M_before - sys_obs.L_d*H*(sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) - sys_ball.flowMap(x, 0, 0, 0))/x(2)*w';
+
+% Fit covariances
+data_before = [data_x(linear_indices_before); data_v(linear_indices_before)];
+disp(size(data_before));
+disp('Covariance before jump');
+cov_before = cov(data_before');
+disp(cov_before);
+
+data_after = [data_x(linear_indices_after); data_v(linear_indices_after)];
+
+disp('Covariance after jump');
+cov_after = cov(data_after');
+disp(cov_after);
+
+mask_jump_before = (data_jumps(linear_indices_after) == 1);
+mask_jump_after = (data_jumps(linear_indices_after) == -1);
+
+disp('Covariance after jump, 2 datasets');
+disp(cov(data_after(:,mask_jump_before)'));
+disp(cov(data_after(:,mask_jump_after)'));
+
+disp('Covariance after jump, multiplied');
+disp(M_before*cov_before*M_before');
+disp(M_after*cov_before*M_after');
+
+disp('Covariance after jump, theoritical');
+disp(M_before*cov(data_before(:, mask_jump_before)')*M_before');
+disp(M_after*cov(data_before(:, mask_jump_after)')*M_after');
+
+% Source - https://stackoverflow.com/a/34308544
+% Posted by fhoussiau, modified by community. See post 'Timeline' for change history
+% Retrieved 2026-02-11, License - CC BY-SA 3.0
+
+function plot_ellipse(C, mean, num_fig)
+    npts=50;
+    % plot the gaussian fits
+    tt=linspace(0,2*pi,npts)';
+    x = cos(tt); y=sin(tt);
+    ap = [x(:) y(:)]';
+    [v,d]=eig(C); 
+    d = 2 * sqrt(d); % convert variance to sdwidth*sd
+    disp(v*d*ap)
+    disp(repmat(mean, 1, size(ap,2)))
+    bp = (v*d*ap) + repmat(mean, 1, size(ap,2)); 
+    figure(num_fig);
+    hold on;
+    plot(bp(1,:), bp(2,:));
+end 
+
+plot_ellipse(cov_before, mean(data_before, 2), 3);
+
+plot_ellipse(cov_after, mean(data_after, 2), 4);
+plot_ellipse(cov(data_after(:,mask_jump_before)'), mean(data_after(:,mask_jump_before), 2), 4);
+plot_ellipse(cov(data_after(:,mask_jump_after)'), mean(data_after(:,mask_jump_after), 2), 4);
