@@ -21,8 +21,8 @@ sys_obs.f_air = sys_ball.f_air;
 
 % Choose the observer gains
 
-sys_obs.L_c = [1.8; 1.6];   % Flow gains for a stable observer (not enough for convergence in every case, see the 20th init conditions for instance)
-sys_obs.L_d = 1*[0.0; 0.1]; % Jump gain
+sys_obs.L_c = 0*[1.8; 1.6];   % Flow gains for a stable observer (not enough for convergence in every case, see the 20th init conditions for instance)
+sys_obs.L_d = 0*[0.0; 0.1]; % Jump gain
 sys_obs.K = [0, 0];         % Gain on jump detection
 %BEWARE: K(1) < 0.5 is necessary to enforce transversality
 
@@ -56,19 +56,26 @@ sys
 
 % Define solver's parameter
 max_dt_step = 0.05;
-config = HybridSolverConfig('AbsTol', 1e-4, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
+config = HybridSolverConfig('AbsTol', 1e-7, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
 
+% Number of random points to generate
+n = 3000;
+
+mu = [1; 2];          % Mean vector (expectation)
+sigma = 1e-6*[2 0; 0 2];      % Covariance matrix
+
+% Generate random points
+rng('default'); % For reproducibility (optional)
+points = mvnrnd(mu, sigma, n);
+
+% Plot the trajectory
+index = 1;
+x0_cell = {[1; 2]; [points(index, 1); points(index, 2)]; [points(index, 1); points(index, 2); reshape(eye(2), [4,1])]};
+tspan = [0, 15];
+jspan = [0, 5000];
+
+% Generate Points
 if GENERATE_POINTS
-
-    % Number of random points to generate
-    n = 3000;
-
-    mu = [1; 2];          % Mean vector (expectation)
-    sigma = 1e-5*[2 0; 0 2];      % Covariance matrix
-
-    % Generate random points
-    rng('default'); % For reproducibility (optional)
-    points = mvnrnd(mu, sigma, n);
 
     % Plot the initial conditions
     figure(1);
@@ -147,10 +154,6 @@ else
     data_jumps = dataset.data_jumps;
 end 
 
-x0_cell = {[1; 2]; [points(index, 1); points(index, 2)]; [points(index, 1); points(index, 2); reshape(eye(2), [4,1])]};
-tspan = [0, 25];
-jspan = [0, 5000];
-
 %% Solve coupled system 
 sol = sys.solve(x0_cell, tspan, jspan, config);
 
@@ -178,7 +181,6 @@ hpb.subplots('on')...
     .plotFlows(sol('Kallman_Ref').select(1:2))
  
 
-data;
 
 %% Define auxiliary function
 function linear_indices = indices_from_time(t, data_t, data_x)
@@ -203,7 +205,7 @@ axis equal;
 grid on;
 
 % Plot the points after a jump
-t_after = 0.73;
+t_after = 0.71;
 linear_indices_after = indices_from_time(t_after, data_t, data_x);
 
 %disp(data_x(linear_indices))  for test purposes, 41
@@ -241,6 +243,8 @@ H = [1, 0];
 w = [1; 0];
 
 x = [0; -4.85];
+y = 0;
+
 M_before = J - sys_obs.L_d*H - (J*sys_ball.flowMap(x, 0, 0, 0) - sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) )/x(2)*w';
 M_after = M_before - sys_obs.L_d*H*(sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) - sys_ball.flowMap(x, 0, 0, 0))/x(2)*w';
 
