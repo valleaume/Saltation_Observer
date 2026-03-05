@@ -2,7 +2,7 @@ addpath('utils');
 close all;
 
 GENERATE_POINTS = false;
-data_to_load = 'raw-bouncing-ball-after-before-04-Mar-2026.mat';
+data_to_load = 'raw-bouncing-ball-after-before-05-Mar-2026.mat';
 
 % Define the plant subsystem
 sys_ball = BouncingBallSubSystemClass();
@@ -21,8 +21,8 @@ sys_obs.f_air = sys_ball.f_air;
 
 % Choose the observer gains
 
-sys_obs.L_c = 0.6*[1.8; 1.6];   % Flow gains for a stable observer (not enough for convergence in every case, see the 20th init conditions for instance)
-sys_obs.L_d = 10*[0.0; 1.1];    % Jump gain (make it high to see a discrepancy)
+sys_obs.L_c = 2.6*[1.8; 1.6];   % Flow gains for a stable observer (not enough for convergence in every case, see the 20th init conditions for instance)
+sys_obs.L_d = 2*[0.0; 1.1];    % Jump gain (make it high to see a discrepancy)
 sys_obs.K = [0, 0];             % Gain on jump detection
 %BEWARE: K(1) < 0.5 is necessary to enforce transversality
 
@@ -341,7 +341,7 @@ end
 
 plot_ellipse(cov_before, mean(data_before, 2), 6);
 
-plot_ellipse(cov_after, mean(data_after, 2), 7);
+%plot_ellipse(cov_after, mean(data_after, 2), 7);
 plot_ellipse(M_before*cov_before*M_before', mean(M_before*data_before, 2), 7);
 plot_ellipse(M_after*cov_before*M_after', mean(M_after*data_before, 2), 7);
 
