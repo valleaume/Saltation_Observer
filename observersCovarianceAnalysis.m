@@ -205,18 +205,6 @@ function linear_indices = indices_from_time(t, data_t, data_x)
     linear_indices = sub2ind([rows, cols], j_mat, 1:cols);
 end
 
-%% Plot the points distribution before a jump
-t_before = 0.695;
-linear_indices_before = indices_from_time(t_before, data_t, data_x);
-
-figure(3)
-scatter(data_x(linear_indices_before), data_v(linear_indices_before), [], data_jumps(linear_indices_before), 'filled');
-colormap('jet');
-xlabel('x');
-ylabel('v');
-title(sprintf('Distribution of points before jump (t=%.2f)', t_before));
-axis equal;
-grid on;
 
 % Plot the points after a jump
 t_after = 0.71;
@@ -234,6 +222,19 @@ title(sprintf('Distribution of points after jump (t=%.2f)', t_after));
 axis equal;
 grid on;
 
+%% Plot the points distribution before a jump
+t_before = 0.699;
+linear_indices_before = indices_from_time(t_before, data_t, data_x);
+
+figure(3)
+scatter(data_x(linear_indices_before), data_v(linear_indices_before), [], data_jumps(linear_indices_after), 'filled');
+colormap('jet');
+xlabel('x');
+ylabel('v');
+title(sprintf('Distribution of points before jump (t=%.2f)', t_before));
+axis equal;
+grid on;
+
 % Plot the points before second jump
 t_after_2 = 1.67;
 linear_indices = indices_from_time(t_after_2, data_t, data_x);
@@ -248,19 +249,8 @@ title(sprintf('Distribution of points before 2nd jump (t=%.2f)', t_after_2));
 axis equal;
 grid on;
 
-%% Plot the points error distribution before a jump
-linear_indices_before = indices_from_time(t_before, data_t, data_x);
 
-figure(6)
-scatter(data_x(linear_indices_before)-data_x_ref(linear_indices_before), data_v(linear_indices_before)-data_v_ref(linear_indices_before), [], data_jumps(linear_indices_before), 'filled');
-colormap('jet');
-xlabel('$x-x_{ref}$', 'Interpreter', 'latex');
-ylabel('$v-v_{ref}$', 'Interpreter', 'latex');
-title(sprintf('Distribution of observer error before jump (t=%.2f)', t_before));
-axis equal;
-grid on;
-
-% Plot the points after a jump$
+%% Plot the points after a jump$
 linear_indices_after = indices_from_time(t_after, data_t, data_x);
 
 figure(7);
@@ -269,6 +259,20 @@ colormap('jet');
 xlabel('$x-x_{ref}$', 'Interpreter', 'latex');
 ylabel('$v-v_{ref}$', 'Interpreter', 'latex');
 title(sprintf('Distribution of observer error after jump (t=%.2f)', t_after));
+axis equal;
+grid on;
+
+% Plot the points error distribution before a jump
+linear_indices_before = indices_from_time(t_before, data_t, data_x);
+
+figure(6)
+scatter(data_x(linear_indices_before)-data_x_ref(linear_indices_before), data_v(linear_indices_before)-data_v_ref(linear_indices_before), [], data_jumps(linear_indices_after), 'filled');
+colormap('jet');
+hold on;
+xline(0, "LineWidth", 1, "LineStyle", "-.")
+xlabel('$x-x_{ref}$', 'Interpreter', 'latex');
+ylabel('$v-v_{ref}$', 'Interpreter', 'latex');
+title(sprintf('Distribution of observer error before jump (t=%.2f)', t_before));
 axis equal;
 grid on;
 %% Saltation matrices 1rst jump
