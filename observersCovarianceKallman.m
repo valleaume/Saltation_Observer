@@ -2,7 +2,7 @@ addpath('utils');
 close all;
 
 GENERATE_POINTS = false;
-data_to_load = 'raw-bouncing-ball-after-before-05-Mar-2026.mat';
+data_to_load = 'raw-bouncing-ball-kallman-19-Mar-2026.mat';
 
 % Define the plant subsystem
 sys_ball = BouncingBallSubSystemClass();
@@ -28,29 +28,29 @@ sys_obs.K = [0, 0];             % Gain on jump detection
 
 
 % Define the observer subsystem, regular kallman
-sys_obs_ref = BouncingBallKallmanObserver();
+sys_kallman = BouncingBallKallmanObserver();
 
 % Its dynamic is a copy of the plant's dynamic
-sys_obs_ref.mu = sys_ball.mu;
-sys_obs_ref.lambda = sys_ball.lambda;
-sys_obs_ref.f_air = sys_ball.f_air;
+sys_kallman.mu = sys_ball.mu;
+sys_kallman.lambda = sys_ball.lambda;
+sys_kallman.f_air = sys_ball.f_air;
 
 % Choose the observer gains
-sys_obs_ref.gain = 0.23;
-sys_obs_ref.lambda_kallman = 0.4;
-sys_obs_ref.gamma_kallman = 1;
-%sys_obs_ref.K = [0.24, -20];
+sys_kallman.gain = 0.23;
+sys_kallman.lambda_kallman = 0.24;
+sys_kallman.gamma_kallman = 0.3;
+%sys_kallman.K = [0.24, -20];
 
 % Deactivate saltation
-sys_obs_ref.salted = false;
+sys_kallman.salted = true;
 
 
 %% Define the coupled observerver-plant system 
-sys = CompositeHybridSystem('Ball', sys_ball, 'Observer', sys_obs, 'Kallman', sys_obs_ref);
+sys = CompositeHybridSystem('Ball', sys_ball, 'Kallman', sys_kallman, 'LinearObserver', sys_obs);
 obs_input = @(y_ball, ~) y_ball;
-sys.setInput('Observer', obs_input);
-
 sys.setInput('Kallman', obs_input);
+
+sys.setInput('LinearObserver', obs_input);
 
 sys
 
@@ -70,7 +70,7 @@ points = mvnrnd(mu, sigma, n);
 
 % Plot the trajectory
 index = 1;
-x0_cell = {[1; 2]; [points(index, 1); points(index, 2)]; [points(index, 1); points(index, 2); reshape(sigma, [4,1])]};
+x0_cell = {[1; 2]; [points(index, 1); points(index, 2); reshape(sigma, [4,1])]; [points(index, 1); points(index, 2)]};
 tspan = [0, 15];
 jspan = [0, 5000];
 
@@ -99,22 +99,22 @@ if GENERATE_POINTS
 
     for index = 1:n
         % X_0 is first element of cell, hat{X_0} is the second
-        x0_cell = {[1; 2]; [points(index, 1); points(index, 2)]; [points(index, 1); points(index, 2); reshape(eye(2), [4,1])]};
+        x0_cell = {[1; 2]; [points(index, 1); points(index, 2); reshape(eye(2), [4,1])]; [points(index, 1); points(index, 2)]};
         tspan = [0, 2];
         jspan = [0, 15];
 
         % Solve coupled system 
         sol = sys.solve(x0_cell, tspan, jspan, config);
-        data_x{end+1}  = sol('Observer').x(:,1);
-        data_v{end+1}  = sol('Observer').x(:,2);
+        data_x{end+1}  = sol('Kallman').x(:,1);
+        data_v{end+1}  = sol('Kallman').x(:,2);
         data_x_ref{end+1}  = sol('Ball').x(:,1);
         data_v_ref{end+1}  = sol('Ball').x(:,2);
         data_t_ref{end+1}  = sol('Ball').t;
-        data_t{end+1} = sol('Observer').t;
+        data_t{end+1} = sol('Kallman').t;
 
-        assert(isequal(sol('Ball').t, sol('Observer').t), "discrepancy in time index")
-        mask_jump_after = (sol('Ball').j - sol('Observer').j) > 0;
-        mask_jump_before = (sol('Ball').j - sol('Observer').j) < 0;
+        assert(isequal(sol('Ball').t, sol('Kallman').t), "discrepancy in time index")
+        mask_jump_after = (sol('Ball').j - sol('Kallman').j) > 0;
+        mask_jump_before = (sol('Ball').j - sol('Kallman').j) < 0;
         sign_jump = zeros(1,length(mask_jump_after));
         for i=2:length(mask_jump_after)
             if mask_jump_before(i)
@@ -185,14 +185,14 @@ hpb.subplots('on')...
     .jumpColor('m')...
     .jumpEndMarker('o')...
     .legend('$\hat{x}_1$', '$\hat{x}_2$')...
-    .plotFlows(sol('Observer').select(1:2))
+    .plotFlows(sol('Kallman').select(1:2))
 hold on
 hpb.subplots('on')...
     .flowColor('#168f2a')...
     .jumpColor('m')...
     .jumpEndMarker('x')...
     .legend('$\hat{x}^k_1$', '$\hat{x}^k_2$')...
-    .plotFlows(sol('Kallman').select(1:2))
+    .plotFlows(sol('LinearObserver').select(1:2))
  
 
 
@@ -205,10 +205,7 @@ function linear_indices = indices_from_time(t, data_t, data_x)
     linear_indices = sub2ind([rows, cols], j_mat, 1:cols);
 end
 
-function sigma_points = unscentedTranform(point, cov)
- %Todo
-end
-% unscentedFilter = unscentedKalmanFilter()
+
 
 %% Plot the distributions for different time steps
 
@@ -256,6 +253,7 @@ ylabel('$v-v_{ref}$', 'Interpreter', 'latex');
 title(sprintf('Distribution of points before 2nd jump (t=%.2f)', t_after_2));
 axis equal;
 grid on;
+
 %% Saltation matrices 1rst jump
 
 F = [0, 1; 0, 0];
@@ -267,8 +265,24 @@ w = [1; 0];
 x = [0; -4.85];
 y = 0;
 
-M_before = J - sys_obs.L_d*H - (J*sys_ball.flowMap(x, 0, 0, 0) - sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) )/(w'*sys_ball.flowMap(x, 0, 0, 0))*w';
-M_after = M_before - sys_obs.L_d*H*(sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) - sys_ball.flowMap(x, 0, 0, 0))/(w'*sys_ball.flowMap(x, 0, 0, 0))*w';
+% Fit covariances
+data_before = [data_x(linear_indices_before)-data_x_ref(linear_indices_before); data_v(linear_indices_before)-data_v_ref(linear_indices_before)];
+disp(size(data_before));
+disp('Covariance before jump');
+cov_before = cov(data_before');
+disp(cov_before);
+% Use P = covariance 
+P =cov_before;
+
+R_d = sys_kallman.gain*eye(1);
+P = icare(F, H', 0, R_d,0, eye(2), 0);
+disp('P');
+disp( icare(F, H', 0, R_d,0, eye(2), 0));
+
+K = P*H'/(H*P*H'+ R_d);
+
+M_before = J - J*K*H - (J*sys_ball.flowMap(x, 0, 0, 0) - sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) )/(w'*sys_ball.flowMap(x, 0, 0, 0))*w';
+M_after = M_before - J*K*H*(sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) - sys_ball.flowMap(x, 0, 0, 0))/(w'*sys_ball.flowMap(x, 0, 0, 0))*w';
 
 disp('M_before');
 disp(M_before);

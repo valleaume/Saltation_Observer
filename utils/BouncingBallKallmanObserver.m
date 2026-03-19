@@ -89,12 +89,12 @@ classdef BouncingBallKallmanObserver < HybridSubsystem
             K_d = P*H'/(H*P*H'+ R_d); % From BAo's article
 
             if this.salted
-                P_plus = 1/this.gamma_kallman*salt_before*P*salt_before'; % 1/this.gamma_kallman*salt_before*(eye(2)-K_d*H)*P*salt_before';
+                P_plus = 1/this.gamma_kallman*J*(eye(2)-K_d*H)*P*J'; % 1/this.gamma_kallman*salt_before*(eye(2)-K_d*H)*P*salt_before';
             else
                 P_plus = P;
             end
 
-            x_plus_partial = [h; -this.lambda*v + this.mu] ;%+ J*K_d*(u - h);
+            x_plus_partial = [h; -this.lambda*v + this.mu] + J*K_d*(u - h);
             xplus = [x_plus_partial; reshape(P_plus, [4,1])];
         end
         
