@@ -43,7 +43,7 @@ classdef BouncingBallKallmanObserver < HybridSubsystem
 
         % To define the data of the system, we implement 
         % the abstract functions from HybridSystem.m
-        function xdot = flowMap(this, x, u, t, j)
+        function xdot = flowMap(this, x, y, t, j)
             % Extract the state components.
             % import
             v = x(this.velocity_index);
@@ -60,12 +60,12 @@ classdef BouncingBallKallmanObserver < HybridSubsystem
 
 
             % Define the value of the flow map f(x). 
-            xdot_partial = f + P*H'*R_c_inv*(u - h);
+            xdot_partial = f + P*H'*R_c_inv*(y - h);
             P_dot = this.lambda_kallman*P + F*P + P*F'- P*H'*R_c_inv*H*P;
 
             xdot = [xdot_partial; reshape(P_dot, [4,1])];
         end
-        function xplus = jumpMap(this, x, u, t, j)
+        function xplus = jumpMap(this, x, y, t, j)
             % Extract the state components.
             h = x(this.height_index);
             v = x(this.velocity_index);
@@ -94,25 +94,25 @@ classdef BouncingBallKallmanObserver < HybridSubsystem
                 P_plus = P;
             end
 
-            x_plus_partial = [h; -this.lambda*v + this.mu] + J*K_d*(u - h);
+            x_plus_partial = [h; -this.lambda*v + this.mu] + J*K_d*(y - h);
             xplus = [x_plus_partial; reshape(P_plus, [4,1])];
         end
         
-        function inC = flowSetIndicator(this, x, u, t, j)
+        function inC = flowSetIndicator(this, x, y, t, j)
             % Extract the state components.
             h = x(this.height_index);
             v = x(this.velocity_index);
-            x_c = [h; v] + this.K*(u-h);
+            x_c = [h; v] + this.K*(y-h);
             h_c = x_c(1);
             v_c = x_c(2);
             % Set 'inC' to 1 if 'hat{x}, y' is in the extended flow set $hat{C}$ and to 0 otherwise.
             inC = (h_c >= 0) || (v_c >= 0);
         end
-        function inD = jumpSetIndicator(this, x, u, t, j)
+        function inD = jumpSetIndicator(this, x, y, t, j)
             % Extract the state components.
             h = x(this.height_index);
             v = x(this.velocity_index);
-            x_c = [h; v] + this.K*(u-h);
+            x_c = [h; v] + this.K*(y-h);
             h_c = x_c(1);
             v_c = x_c(2);
             % Set 'inD' to 1 if 'hat{x} + K(y-h(x))' is in the jump set and to 0 otherwise.
