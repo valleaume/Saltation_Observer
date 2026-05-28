@@ -6,8 +6,8 @@ classdef ASLIP_Hybrid < HybridSubsystem
     properties
 
         m_b = 1;        % Body mass
-        J_b = 0.5;      % Body moment of inertia
-        l_b = 1;        % Distance from hip to COM
+        J_b = 1;      % Body moment of inertia
+        l_b = 0.5;        % Distance from hip to COM
         a_g = 9.8;      % Gravitational acceleration
         k = 1000;       % Leg spring constant
         k_h = 400;      % Hip spring constant
@@ -44,11 +44,11 @@ classdef ASLIP_Hybrid < HybridSubsystem
             l_l = ql(3);
 
             % Compute partial derivatives
-            dV_dtheta_l = obj.m_b * obj.a_g * (l_l * cos(theta_l) - obj.l_b * cos(theta_l + theta_h));
-            dV_dtheta_h = -obj.m_b * obj.a_g * obj.l_b * cos(theta_l + theta_h) + obj.k_h * (theta_h - obj.theta_0);
+            dV_dtheta_l = obj.m_b * obj.a_g * (l_l * cos(theta_l) + obj.l_b * cos(theta_l + theta_h));
+            dV_dtheta_h = obj.m_b * obj.a_g * obj.l_b * cos(theta_l + theta_h) + obj.k_h * (theta_h - obj.theta_0);
             dV_dll = obj.m_b * obj.a_g * sin(theta_l) + obj.k * (l_l - obj.l_l0);
 
-            G = [dV_dtheta_l; dV_dtheta_h; dV_dll];
+            G = [dV_dtheta_l, dV_dtheta_h, dV_dll];
         end
 
         function qt = T_bt(obj, qb)
@@ -69,6 +69,46 @@ classdef ASLIP_Hybrid < HybridSubsystem
             y_t = y_b - obj.l_b * sin(theta_b) - obj.l_l0 * sin(theta_b - obj.theta_0);
 
             qt = [x_t; y_t];
+        end
+
+        function d_qt = T_bt_dqb(obj, qb)
+            % Transformation from body configuration to toe position
+            %
+            % Args:
+            %   obj: Instance of ASLIP_Hybrid
+            %   qb: Body configuration [x_b, y_b, theta_b] (array)
+            %
+            % Returns:
+            %   d_qt: Jacobian of toe position with respect to body configuration (2x3 array)
+
+            x_b = qb(1);
+            y_b = qb(2);
+            theta_b = qb(3);
+
+            x_t = x_b - obj.l_b * cos(theta_b) - obj.l_l0 * cos(theta_b - obj.theta_0);
+            y_t = y_b - obj.l_b * sin(theta_b) - obj.l_l0 * sin(theta_b - obj.theta_0);
+
+            d_qt = [1, 0, obj.l_b * sin(theta_b) + obj.l_l0 * sin(theta_b - obj.theta_0);
+                     0, 1, -obj.l_b * cos(theta_b) - obj.l_l0 * cos(theta_b - obj.theta_0)];
+        end
+
+        function dqt_dql = T_bt_dql(obj, ql)
+            % Transformation from leg configuration to toe position
+            %
+            % Args:
+            %   obj: Instance of ASLIP_Hybrid
+            %   ql: Leg configuration [theta_l, theta_h, l_l] (array)
+            %
+            % Returns:
+            %   dqt_dql: Jacobian of toe position with respect to leg configuration (2x3 array)
+
+            theta_l = ql(1);
+            theta_h = ql(2);
+            theta_b = theta_l + theta_h;
+            l_l = ql(3);
+
+            dqt_dql = [0, -l_l * sin(theta_b - theta_h),  cos(theta_b - obj.theta_0);
+                       0,  l_l * cos(theta_b - theta_h),  sin(theta_b - obj.theta_0)];
         end
 
         function ql = T_bl(obj, qb, qt)
@@ -109,15 +149,18 @@ classdef ASLIP_Hybrid < HybridSubsystem
             % mode = 0: flight, mode = 1: stance
 
             mode = x(9);
+            xdot = zeros(9, 1);
+            xdot(1:3) = x(4:6); % Position derivatives
+
             if mode == 0 % Flight phase
                 % Ballistic motion of the body
-                xdot = zeros(9, 1);
-                xdot(1:3) = x(4:6); % Position derivatives
-                xdot(4) = 0;         % x_b is constant in flight
+                
+                xdot(4) = 0;         % x_b velocity is constant in flight
                 xdot(5) = -obj.a_g;     % y_b acceleration due to gravity
-                xdot(6) = 0;         % theta_b is constant in flight
+                xdot(6) = 0;         % theta_b velocity is constant in flight
                 xdot(7) = x(4) + x(6) * ( obj.l_b * sin(x(3)) + obj.l_l0* sin(x(3)- obj.theta_0)); % theta_l_dot = x_b_dot + l_b * theta_b_dot * sin(theta_b)
                 xdot(8) = x(5) - x(6) * ( obj.l_b * cos(x(3)) + obj.l_l0* cos(x(3)- obj.theta_0)); % theta_h_dot = y_b_dot - l_b * theta_b_dot * cos(theta_b)
+            
             else % Stance phase
                 % Lagrangian dynamics of the leg-body system
                 M = diag([obj.m_b, obj.m_b, obj.J_b]); % Mass matrix for body
@@ -133,25 +176,22 @@ classdef ASLIP_Hybrid < HybridSubsystem
                 % Coriolis matrice is null in the correct frame
                 C = zeros(3, 3); % Coriolis matrix (assumed zero for simplicity)
 
-                q_dot = [qb_dot; qt_dot]; % Full state vector for potential energy gradient
-                disp(q_dot);
 
                 ql = obj.T_bl(qb, qt); % Leg configuration
                 G_l = obj.compute_potential_energy_gradient(ql); % Gradient of potential energy
-                disp(G_l);
-                disp(Jac);
-                G =   Jac' * G_l; % Map to body coordinates
+                %disp(G_l);
+                %disp(Jac);
+                G = (G_l*Jac)'; % Map to body coordinates
+                %disp(C*x(4:6));
+                %disp(M);
+                % Acceleration terms: D*ddot_q = -C*dot_q - G
+
+                ddot_q = M\(-C*x(4:6) - G);
 
                 % State derivatives
-                xdot = zeros(7, 1);
+    
                 xdot(1:3) = x(4:6); % Position derivatives
                 xdot(7:8) = 0;
-                
-                disp(G);
-                disp(C*x(4:6));
-                disp(M);
-                % Acceleration terms: D*ddot_q = -C*dot_q - G
-                ddot_q = M\(-C*x(4:6) - G);
                 xdot(4:6) = ddot_q;
             end
             xdot(9) = 0; % Mode does not change during flow
@@ -192,11 +232,25 @@ classdef ASLIP_Hybrid < HybridSubsystem
                 inD = (y_toe <= 0) && (y_toe_dot < 0); % Toe touches ground and is moving downward
             else % Stance phase: jump to flight when leg length exceeds l0
                 l_l = sqrt((x(1) - obj.l_b*cos(x(3)) - x(7))^2 + (x(2) - obj.l_b*sin(x(3)) - x(8))^2); % Leg length
-                Jac = ASLIP_Compute_Jacobian(x(1:3), x(7:8), obj.l_b); % Jacobian of toe position w.r.t. body configuration
+                Jac = ASLIP_Compute_Jacobian(x(1:3), x(7:8), obj.l_b);
                 q_dot = [x(4:6); 0; 0]; % Body velocities and zero leg velocities
                 l_l_dot = Jac(3, :) * q_dot; % Leg length rate of change
                 inD = (l_l >= obj.l_l0) && (l_l_dot >= 0); % Leg length exceeds l0 and is extending
             end
+        end
+
+        function L = lagrangian(obj, x)
+            % Compute the Lagrangian of the system for a given state x
+            qb = x(1:3); % Body configuration
+            qt = x(7:8); % Toe position
+            ql = obj.T_bl(qb, qt); % Leg configuration
+
+            % Kinetic energy (T) and potential energy (V)
+            T = 0.5 * obj.m_b * (x(4)^2 + x(5)^2) + 0.5 * obj.J_b * x(6)^2; % Kinetic energy of the body
+            V = obj.m_b * obj.a_g * qb(2) + ...
+                + 0.5 * obj.k * (ql(3) - obj.l_l0)^2 + 0.5 * obj.k_h * (ql(2) - obj.theta_0)^2; % Potential energy
+
+            L = T + V; % Lagrangian
         end
 
         % --- Helper Functions ---
