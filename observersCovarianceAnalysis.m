@@ -218,27 +218,34 @@ t_after_2 = 1.67;
 
 % Plot the points after a jump
 linear_indices_after = indices_from_time(t_after, data_t, data_x);
+mask_jump_before = (data_jumps(linear_indices_after) == 1);
+mask_jump_after = (data_jumps(linear_indices_after) == -1);
 
-figure(7);
+fig_after = figure(7);
 scatter(data_x(linear_indices_after)-data_x_ref(linear_indices_after), data_v(linear_indices_after)-data_v_ref(linear_indices_after), [], data_jumps(linear_indices_after), 'filled');
 colormap('jet');
+hold on;
+scatter([0], [0], 0.100, 'filled', 'color', 'red');
+hold on;
+xline(0, "LineWidth", 1, "LineStyle", "-.")
 xlabel('$x-x_{ref}$', 'Interpreter', 'latex');
 ylabel('$v-v_{ref}$', 'Interpreter', 'latex');
-title(sprintf('Distribution of observer error after jump (t=%.2f)', t_after));
+%title(sprintf('Distribution of observer error after jump (t=%.2f)', t_after));
 axis equal;
 grid on;
 
 % Plot the points error distribution before a jump
 linear_indices_before = indices_from_time(t_before, data_t, data_x);
 
-figure(6)
+
+fig_before = figure(6);
 scatter(data_x(linear_indices_before)-data_x_ref(linear_indices_before), data_v(linear_indices_before)-data_v_ref(linear_indices_before), [], data_jumps(linear_indices_after), 'filled'); % use the color of whether they will jump or not
 colormap('jet');
 hold on;
-xline(0, "LineWidth", 1, "LineStyle", "-.")
+scatter([0], [0], 0.100, 'filled', 'color', 'red');
 xlabel('$x-x_{ref}$', 'Interpreter', 'latex');
 ylabel('$v-v_{ref}$', 'Interpreter', 'latex');
-title(sprintf('Distribution of observer error before jump (t=%.2f)', t_before));
+%title(sprintf('Distribution of observer error before jump (t=%.2f)', t_before));
 axis equal;
 grid on;
 
@@ -305,11 +312,24 @@ disp(M_before*cov(data_before(:, mask_jump_before)')*M_before');
 disp(M_after*cov(data_before(:, mask_jump_after)')*M_after');
 
 
-plot_ellipse(cov_before, mean(data_before, 2), 6);
+plot_ellipse(cov_before, mean(data_before, 2), 6, 'linewidth', 1, 'linestyle', '-.');
+
+sigma = 1e-6*[2 0; 0 2];
+flow = exp(t_before*F);
+cov_before_th = flow*sigma*flow';
+%plot_ellipse(cov_before_th, mean(data_before, 2), 6, 'linewidth', 2, 'linestyle', '-.');
+legend('jump after $x_{\rm ref}$', 'jump before $x_{\rm ref}$', 'covariance', 'interpreter', 'latex', 'location', 'northwest');
+xlim([-3.8e-3, 2.e-3]);
+ylim([-4.1e-3, 4.3e-3]);
 
 %plot_ellipse(cov_after, mean(data_after, 2), 7);
-plot_ellipse(M_before*cov_before*M_before', mean(M_before*data_before, 2), 7);
-plot_ellipse(M_after*cov_before*M_after', mean(M_after*data_before, 2), 7);
+plot_ellipse(M_before*cov_before*M_before', mean(M_before*data_before, 2), 7, 'color', 'red', 'linewidth', 3);
+plot_ellipse(M_after*cov_before*M_after', mean(M_after*data_before, 2), 7, 'color', 'blue', 'linewidth', 3);
+legend('jump after $x_{\rm ref}$', 'jump before $x_{\rm ref}$','hyperplane $\frac{\partial \hat{\omega}}{\partial \hat{x}}$', '$M_{\rm before}$', '$M_{\rm after}$', 'interpreter', 'latex', 'location', 'northeast');
+xlim([-2e-3, 3.2e-3]);
 
 %plot_ellipse(cov(data_after(:,mask_jump_before)'), mean(data_after(:,mask_jump_before), 2), 4);
 %plot_ellipse(cov(data_after(:,mask_jump_after)'), mean(data_after(:,mask_jump_after), 2), 4);
+
+myPrintPDF(fig_before, 'figures/Before_covariance_ellipse_2024', [10,12]);
+myPrintPDF(fig_after, 'figures/M_after_before_ellipses_2024');

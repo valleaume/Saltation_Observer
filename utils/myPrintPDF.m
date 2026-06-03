@@ -1,4 +1,4 @@
-function []=MyPrintPDF(fig_h, filename)
+function []=MyPrintPDF(fig_h, filename, size_inch)
     % Prints a PDF of a figure, with the correct Fonts/LineWidth etc.
     % h = handle of the figure
     % hERE
@@ -16,6 +16,10 @@ function []=MyPrintPDF(fig_h, filename)
     if ~isempty(leg_h)
         set(leg_h,'Interpreter','Latex','Fontsize',25)
     end
+
+    if nargin < 3 || isempty(size_inch)
+        size_inch = [15, 12];
+    end
     %xlim_ = get(hAxes, Xlim);
     %set(gco,'Interpreter','Latex','Fontsize',14)
     %{
@@ -30,9 +34,10 @@ function []=MyPrintPDF(fig_h, filename)
 
     plots=get(hAxes,'Children');
     set(plots,'LineWidth', 3)
+    pos_size = [0.2 0.2 size_inch(1) size_inch(2)];
     set(fig_h,'Units','inches',...
-        'Position',[0.5 0.5 7 6],...
-        'PaperPositionMode','auto','PaperUnits','inches','PaperSize',[7 6])
+        'Position',pos_size,...
+        'PaperPositionMode','auto','PaperUnits','inches','PaperSize',size_inch)
     grid on
     set(get(hAxes, 'xlabel'), 'Interpreter', 'Latex', 'Fontsize', 34)
     set(get(hAxes, 'ylabel'), 'Interpreter', 'Latex', 'Fontsize', 34)
