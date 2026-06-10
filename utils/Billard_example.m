@@ -4,6 +4,7 @@ classdef Billard_example < HybridSubsystem
     % Define variable properties that can be modified.
     properties
         v_0 = 1;        % Initial velocity of the ball.
+        l = 2;    %observer gain
     end
     
     % Define constant properties that cannot be modified (i.e., "immutable").
@@ -24,7 +25,7 @@ classdef Billard_example < HybridSubsystem
             % pass it the state dimension. This is not strictly necessary, 
             % but it enables more error checking.
             state_dim = 3;  %dim x
-            input_dim = 0;  %dim y
+            input_dim = 1;  %dim y
             output_dim = 1; %dim hat x
             this = this@HybridSubsystem(state_dim, input_dim, output_dim);
         end
@@ -37,6 +38,8 @@ classdef Billard_example < HybridSubsystem
             x_2 = x(this.y_index);
             theta = x(this.theta_index);
 
+            L = [this.l, this.l^2, this.l^3];
+
             % Define the value of the flow map f(x). 
             xdot = [this.v_0*cos(theta); this.v_0*sin(theta); 0];
         
@@ -48,7 +51,7 @@ classdef Billard_example < HybridSubsystem
             x_2 = x(this.y_index);
 
             % Define the value of the guard function g(x). 
-            w = 0.5-0.5*(x_1^2+x_2^2);
+            w = 0.5-0.5*(x_1^2+ 2*x_2^2);
         end
 
         function dw = guardGradient(this, x)
@@ -57,7 +60,7 @@ classdef Billard_example < HybridSubsystem
             x_2 = x(this.y_index);
 
             % Define the value of the guard function g(x). 
-            dw = [-x_1; -x_2];
+            dw = [-x_1; -2*x_2];
         end
 
         function xplus = jumpMap(this, x, u, t, j)
@@ -78,7 +81,6 @@ classdef Billard_example < HybridSubsystem
             theta_plus = atan2(v_plus(2), v_plus(1)); %angle of velocity after reflection
             % Define the value of the jump map g(x). 
 
-            %theta_plus = rem(-2*phi-theta, 2*pi);
             xplus = [x_1; x_2; theta_plus];
         end
 

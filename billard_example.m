@@ -2,15 +2,16 @@ addpath('./utils');
 close;
 
 sys_billard = Billard_example();
+sys_copy = Billard_example();
 
 % Define solver's parameter
 max_dt_step = 0.1;
 config = HybridSolverConfig('AbsTol', 1e-3, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
-sys = CompositeHybridSystem('Billard', sys_billard);
+sys = CompositeHybridSystem('Billard', sys_billard, 'Observer', sys_copy);
 
 % X_0 is first element of cell
 
-x0_cell = {[0.2, 0.3, 0.]'};
+x0_cell = {[0.5, 0.3, 0.]', [0.5, -0.30, 0.]'};
 tspan = [0, 29];
 jspan = [0, 18];
 
@@ -31,6 +32,8 @@ grid on;
 figure(3)
 plot(sol('Billard').x(:,1), sol('Billard').x(:,2));
 grid on;
+hold on;
+plot(sol('Observer').x(:,1), sol('Observer').x(:,2));
 hold on;
 theta = pi/2;
 x_0 = cos(2*pi/3);
