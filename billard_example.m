@@ -1,19 +1,23 @@
 addpath('./utils');
 close;
 
-sys_billard = Billard_example();
-sys_copy = Billard_example();
+sys_billard = Billard_sys();
+sys_copy = Billard_obs();
+%sys_copy.L = [0; 0; 0; 0 ;0];
 
 % Define solver's parameter
 max_dt_step = 0.1;
 config = HybridSolverConfig('AbsTol', 1e-3, 'RelTol', 1e-7, 'MaxStep', max_dt_step);
 sys = CompositeHybridSystem('Billard', sys_billard, 'Observer', sys_copy);
+obs_input = @(y_ball, ~) y_ball;
+sys.setInput('Observer', obs_input);
 
 % X_0 is first element of cell
-
-x0_cell = {[0.5, 0.3, 0.]', [0.5, -0.30, 0.]'};
+disp(sys_copy.init_cond([0.5, 0.3, 0.5*pi/3]));
+disp(sys_copy.init_cond([0.5, 0.3, pi/3]));
+x0_cell = {[0.5; 0.3; pi/3], sys_copy.init_cond([0.5, 0.31, 0.1*pi/3])};
 tspan = [0, 29];
-jspan = [0, 18];
+jspan = [0, 180];
 
 %% Solve coupled system 
 sol = sys.solve(x0_cell, tspan, jspan, config);
@@ -33,7 +37,7 @@ figure(3)
 plot(sol('Billard').x(:,1), sol('Billard').x(:,2));
 grid on;
 hold on;
-plot(sol('Observer').x(:,1), sol('Observer').x(:,2));
+plot(sol('Observer').x(:,1), sol('Observer').x(:,3));
 hold on;
 theta = pi/2;
 x_0 = cos(2*pi/3);
@@ -52,6 +56,21 @@ plot([x_0, 0], [y_0, 0], "LineStyle", '--')
 figure(4)
 plot(sol('Billard').t, sol('Billard').x(:,1).^2+ sol('Billard').x(:,2).^2, 'o-', 'LineWidth', 2);
 disp(sys_billard.normal_angle([1,1]))
+
+figure(6)
+plot(sol('Observer').t, sol('Observer').x(:,5))
+hold on;
+plot(sol('Billard').t, sol('Billard').x(:,3))
+
+figure(7)
+plot(sol('Observer').t, sol('Observer').x(:,3))
+hold on;
+plot(sol('Billard').t, sol('Billard').x(:,2))
+
+figure(8)
+plot(sol('Observer').t, sol('Observer').x(:,1))
+hold on;
+plot(sol('Billard').t, sol('Billard').x(:,1))
 
 figure(5)
 % Define a 3D grid

@@ -1,10 +1,9 @@
-classdef Billard_example < HybridSubsystem
+classdef Billard_sys < HybridSubsystem
     % A bouncing ball modeled as a HybridSystem subclass.
 
     % Define variable properties that can be modified.
     properties
         v_0 = 1;        % Initial velocity of the ball.
-        l = 2;    %observer gain
     end
     
     % Define constant properties that cannot be modified (i.e., "immutable").
@@ -19,14 +18,14 @@ classdef Billard_example < HybridSubsystem
         theta_index = 3;
     end
     methods 
-        function this = Billard_example()
+        function this = Billard_sys()
             % Constructor for instances of the BouncingBall class.
             % Call the constructor for the HybridSystem superclass and
             % pass it the state dimension. This is not strictly necessary, 
             % but it enables more error checking.
             state_dim = 3;  %dim x
             input_dim = 1;  %dim y
-            output_dim = 1; %dim hat x
+            output_dim = 2; %dim hat x
             this = this@HybridSubsystem(state_dim, input_dim, output_dim);
         end
 
@@ -37,8 +36,6 @@ classdef Billard_example < HybridSubsystem
             x_1 = x(this.x_index);
             x_2 = x(this.y_index);
             theta = x(this.theta_index);
-
-            L = [this.l, this.l^2, this.l^3];
 
             % Define the value of the flow map f(x). 
             xdot = [this.v_0*cos(theta); this.v_0*sin(theta); 0];
@@ -51,7 +48,7 @@ classdef Billard_example < HybridSubsystem
             x_2 = x(this.y_index);
 
             % Define the value of the guard function g(x). 
-            w = 0.5-0.5*(x_1^2+ 2*x_2^2);
+            w = 0.5-0.5*(x_1^2+ x_2^2);
         end
 
         function dw = guardGradient(this, x)
@@ -60,7 +57,12 @@ classdef Billard_example < HybridSubsystem
             x_2 = x(this.y_index);
 
             % Define the value of the guard function g(x). 
-            dw = [-x_1; -2*x_2];
+            dw = [-x_1; -x_2];
+        end
+
+        function theta_p = principal_value(this, theta)
+            % Returns the principal value of an angle in radians (-pi to pi)
+            theta_p = mod(theta + pi, 2*pi) - pi;
         end
 
         function xplus = jumpMap(this, x, u, t, j)
@@ -81,7 +83,7 @@ classdef Billard_example < HybridSubsystem
             theta_plus = atan2(v_plus(2), v_plus(1)); %angle of velocity after reflection
             % Define the value of the jump map g(x). 
 
-            xplus = [x_1; x_2; theta_plus];
+            xplus = [x_1; x_2; theta_plus ];
         end
 
         function rotation_mat = R(this, theta)
