@@ -4,8 +4,8 @@ classdef Billard_obs < HybridSubsystem
     % Define variable properties that can be modified.
     properties
         v_0 = 1;        % Initial velocity of the ball.
-        l = 1;
-        L = [1.4142, 0; 1, 0; 0, 1.4142; 0, 1; 0, 0 ];          % observer gain
+        l = 30;
+        L = [1.4142, 0; 1, 0; 0, 0*1.4142; 0, 0*1; 0, 0 ];          % observer gain
     end
     
     % Define constant properties that cannot be modified (i.e., "immutable").
@@ -50,12 +50,12 @@ classdef Billard_obs < HybridSubsystem
             v_1 = x(this.x_dot_index);
 
 
-            A_x = [0, 1, 0, 0, 0; 0, 0, 0, 0, 0; 0, 0, 0, 1, 0;  0, 0, 0, 0, 0; 0, 0, 0, 0, 0];
+            A_x = [0, 1, 0, 0, 0; 0, 0, 0, 0, 0; 0, 0, 0, 0, 0;  0, 0, 0, 0, 0; 0, 0, 0, 0, 0];
             L_x = this.L;
             C = [1, 0, 0, 0, 0; 0, 0, 1, 0, 0];
             % Define the value of the flow map f(x). 
             l_gain = this.l;
-            xdot = A_x*x + diag([l_gain, l_gain^2, l_gain, l_gain^2, l_gain^5])*L_x*(u-C*x);     
+            xdot = A_x*x + diag([l_gain, l_gain^2, l_gain, l_gain^2, l_gain^5])*L_x*(u-C*x)+[0; 0; sign(sin(theta))*this.v_0*real(sqrt(1-(v_1/this.v_0)^2));0; 0];     
         
         end
 
@@ -91,10 +91,10 @@ classdef Billard_obs < HybridSubsystem
 
             phi = this.normal_angle(x);
 
-            theta_hat = real(acos(v_x/this.v_0)*sign(x_2));
+            theta_hat = real(acos(v_x/this.v_0)*sign(sin(theta)));
             disp(v_x/this.v_0)
             disp(theta_hat)
-            theta = real((theta + theta)/2);
+            theta = real((theta_hat + theta_hat)/2);
 
 
             v_plus = this.v_0*([cos(theta); sin(theta)]-2*cos(theta-phi)*[cos(phi); sin(phi)]);
@@ -111,7 +111,8 @@ classdef Billard_obs < HybridSubsystem
 
         function phi = normal_angle(this, x)
             dw = this.guardGradient(x);
-
+            disp('dw')
+            disp(dw)
             phi = atan2(dw(2), dw(1)); %angle of normal vector to the guard surface dw
         end
         

@@ -15,12 +15,14 @@ sys.setInput('Observer', obs_input);
 % X_0 is first element of cell
 disp(sys_copy.init_cond([0.5, 0.3, 0.5*pi/3]));
 disp(sys_copy.init_cond([0.5, 0.3, pi/3]));
-x0_cell = {[0.5; 0.3; pi/3], sys_copy.init_cond([0.5, 0.31, 0.1*pi/3])};
+x0_cell = {[0.5; 0.3; pi/3], sys_copy.init_cond([0.5, 0.31, 0.9*pi/3])};
 tspan = [0, 29];
 jspan = [0, 180];
 
 %% Solve coupled system 
 sol = sys.solve(x0_cell, tspan, jspan, config);
+
+close all;
 
 figure(1)
 hpb = HybridPlotBuilder().subplots('on')...
@@ -66,6 +68,14 @@ figure(7)
 plot(sol('Observer').t, sol('Observer').x(:,3))
 hold on;
 plot(sol('Billard').t, sol('Billard').x(:,2))
+
+figure(9)
+subplot(3,1,1);
+plot(sol('Observer').t, sol('Observer').x(:,3) - sol('Billard').x(:,2));
+subplot(3, 1, 2);
+plot(sol('Observer').t, sol('Observer').x(:,1) - sol('Billard').x(:,1));
+subplot(3, 1, 3);
+plot(sol('Observer').t, sol('Observer').x(:,5) - sol('Billard').x(:,3));
 
 figure(8)
 plot(sol('Observer').t, sol('Observer').x(:,1))
