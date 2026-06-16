@@ -239,14 +239,14 @@ linear_indices_before = indices_from_time(t_before, data_t, data_x);
 
 
 fig_before = figure(6);
-scatter(data_x(linear_indices_before)-data_x_ref(linear_indices_before), data_v(linear_indices_before)-data_v_ref(linear_indices_before), [], data_jumps(linear_indices_after), 'filled'); % use the color of whether they will jump or not
-colormap('jet');
+scatter(data_x(linear_indices_before)-data_x_ref(linear_indices_before), data_v(linear_indices_before)-data_v_ref(linear_indices_before), 'filled'); % use the color of whether they will jump or not
+%colormap('jet');
 hold on;
-scatter([0], [0], 0.100, 'filled', 'color', 'red');
+%scatter([0], [0], 0.100, 'filled', 'color', 'red');
 xlabel('$x-x_{ref}$', 'Interpreter', 'latex');
 ylabel('$v-v_{ref}$', 'Interpreter', 'latex');
 %title(sprintf('Distribution of observer error before jump (t=%.2f)', t_before));
-axis equal;
+%axis equal;
 grid on;
 
 % Plot the points before second jump
@@ -318,8 +318,8 @@ sigma = 1e-6*[2 0; 0 2];
 flow = exp(t_before*F);
 cov_before_th = flow*sigma*flow';
 %plot_ellipse(cov_before_th, mean(data_before, 2), 6, 'linewidth', 2, 'linestyle', '-.');
-legend('jump after $x_{\rm ref}$', 'jump before $x_{\rm ref}$', 'covariance', 'interpreter', 'latex', 'location', 'northwest');
-xlim([-3.8e-3, 2.e-3]);
+%legend('$\hat{x}$', 'covariance', 'interpreter', 'latex', 'location', 'northwest');
+xlim([-8e-4, 1.e-3]);
 ylim([-4.1e-3, 4.3e-3]);
 
 %plot_ellipse(cov_after, mean(data_after, 2), 7);
@@ -331,5 +331,5 @@ xlim([-2e-3, 3.2e-3]);
 %plot_ellipse(cov(data_after(:,mask_jump_before)'), mean(data_after(:,mask_jump_before), 2), 4);
 %plot_ellipse(cov(data_after(:,mask_jump_after)'), mean(data_after(:,mask_jump_after), 2), 4);
 
-myPrintPDF(fig_before, 'figures/Before_covariance_ellipse_2024', [10,12]);
-myPrintPDF(fig_after, 'figures/M_after_before_ellipses_2024');
+myPrintPDF(fig_before, 'figures/Before_covariance_ellipse_Florent', [10, 3*12]);
+%myPrintPDF(fig_after, 'figures/M_after_before_ellipses_2024');
