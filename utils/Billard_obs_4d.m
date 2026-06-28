@@ -4,16 +4,22 @@ classdef Billard_obs_4d < HybridSubsystem
     properties
         l = 1; % observer tuning
         % observer gain for the single measurement y = x1 (4x1)
-        L_c = [1.4142; 1; 0; 0];
-        %L_c = [ 0.68440069; 1.48911843; -1.25136612 ;-0.76382869];
+        %L_c = [1.4142; 1; 0; 0];
+        L_c = [ 0.68440069; 1.48911843; -1.25136612 ;-0.76382869];
         % jump-time linear correction columns for quadrants 1..4 (4x4)
         % columns assigned as requested: col3, col2, col1, col4
-        L_d_all = [
-            11.07831135,  7.2239355,  -1.96218402, -0.39661948;
-            -4.48277155, -1.14385092,  0.88675902,  2.20383996;
-            -3.0389842,  -2.29205928,  0.37897709,  0.09395072;
-            2.02085714,   0.42398462, -0.33025135, -1.19096221
-        ];
+        L_d_all = [11.07831135, -4.48277155, -3.0389842, 2.02085714;
+        -0.39661948,  2.20383996, 0.09395072, -1.19096221;
+        -1.96218402, 0.88675902, 0.37897709, -0.33025135;
+         7.2239355, -1.14385092, -2.29205928, 0.42398462]';
+
+        % %L_d_all = [
+        %     11.07831135,  7.2239355,  -1.96218402, -0.39661948;
+        %     -4.48277155, -1.14385092,  0.88675902,  2.20383996;
+        %     -3.0389842,  -2.29205928,  0.37897709,  0.09395072;
+        %     2.02085714,   0.42398462, -0.33025135, -1.19096221
+        % ];
+        %Ld_all = [Ld_1, this.Ld_2, this.Ld_3, this.Ld_4];
         L_d = zeros(4,4);
     end
 
@@ -70,7 +76,7 @@ classdef Billard_obs_4d < HybridSubsystem
                 y = u;   % scalar measurement y = x1
             end
 
-            xdot = A_x*x + K*L_c*(y - C*x);
+            xdot = A_x*x + K*this.L_c*(y - this.C*x);
         end
 
         function w = guard(this, x)
@@ -112,18 +118,18 @@ classdef Billard_obs_4d < HybridSubsystem
             e = y - this.C*x;
 
             % choose quadrant-based correction column index
-            if x1 >= 1/2
+            if x1 <= -1/2
                 idx = 1; % quadrant I
-            elseif x1 < -1/2 
+            elseif x1 > 1/2 
                 idx = 3; % quadrant II
             elseif  x2 < -1/2
                 idx = 4; % quadrant III
             else
                 idx = 2; % quadrant IV
             end
-
+            
             % apply linear jump-time correction
-            xplus = xplus_base + this.L_d(:, idx) * e;
+            xplus = xplus_base + this.L_d_all(:, idx) * e;
         end
 
         function inC = flowSetIndicator(this, x, u, t, j)
