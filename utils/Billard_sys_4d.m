@@ -10,6 +10,10 @@ classdef Billard_sys_4d < HybridSubsystem
         x1dot_index = 2;
         x2_index = 3;
         x2dot_index = 4;
+        A_c = [0, 1, 0, 0;
+              0, 0, 0, 0;
+              0, 0, 0, 1;
+              0, 0, 0, 0];
     end
 
     methods

@@ -13,10 +13,10 @@ obs_input = @(y_ball, ~) y_ball;
 sys.setInput('Observer', obs_input);
 
 % X_0 is first element of cell
-disp(sys_copy.init_cond([0.5, 0.3, 0.5*pi/3]));
+disp(sys_copy.init_cond([0.5, 0.5, 7*pi/4]));
 disp(sys_copy.init_cond([0.5, 0.3, pi/3]));
-x0_cell = {[0.5; 0.3; pi/3], sys_copy.init_cond([0.5, 0.31, 0.9*pi/3])};
-tspan = [0, 29];
+x0_cell = {[0.5; 0.5; 7*pi/4], sys_copy.init_cond([0.5; 0.61; 7.7*pi/4])};
+tspan = [0, 149];
 jspan = [0, 180];
 
 %% Solve coupled system 
