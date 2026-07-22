@@ -183,6 +183,49 @@ cf.CurrentAxes.YLim = [0, 0.16];
 
 myPrintPDF(cf, 'figures\Norm_error')
 
+%% Generate Stable Result
+
+sys_obs.L_c = [0.8; 0.6];   % Flow gains for a stable observer
+
+% Define the modified observerver-plant system 
+sys_stable = CompositeHybridSystem('Ball', sys_ball, 'Observer', sys_obs);
+obs_input = @(y_ball, ~) y_ball;
+sys_stable.setInput('Observer', obs_input);
+
+x0_cell = {[5; 2]; (1 - 6e-1)*[5; 2]};
+sol_stable = sys_stable.solve(x0_cell, tspan, jspan, config);
+%% Plot norm of error in the stable case without the mask and velocity time series
+cf = figure(8);
+
+subplot(2,1,2);
+e_stable_full = sol_stable('Ball').x - sol_stable('Observer').x;
+P = eye(2);
+stable_norm_full = diag(e_stable_full*P*e_stable_full');
+
+plot(sol_stable('Ball').t, stable_norm_full, color='black', LineWidth=1.5);
+grid on;
+xlabel('$t$', 'Interpreter', 'Latex')
+ylabel('$\|x_-\hat{x}\|^2$', 'Interpreter', 'Latex')
+%legend('$\mathcal{M}_{\rm after}$ stable (no mask)', 'Interpreter', 'Latex')
+
+xlim([0, 25]);
+ylim([0, 14.5]);
+set(gca, 'FontSize', 24);
+
+
+subplot(2,1,1);
+set(gca, 'FontSize', 34);
+plot(sol_stable('Ball').t, sol_stable('Ball').x(:,2), 'Color', 'blue');
+hold on;
+plot(sol_stable('Observer').t, sol_stable('Observer').x(:,2), 'Color', 'red', 'LineStyle', ':');
+grid on;
+%xlabel('$t$', 'Interpreter', 'Latex')
+ylabel('$x_2$' , 'Interpreter', 'Latex')
+legend('$x$', '$\hat{x}$', 'Interpreter', 'Latex')
+xlim([0, 25]);
+
+myPrintPDF(cf, 'figures\Norm_error_stable_no_mask')
+
 %% Synchronization error
 
 tspan = [0, 25];
