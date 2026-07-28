@@ -34,7 +34,7 @@ fprintf('Data loaded successfully!\n');
 
 %% ====== SOLVE A SINGLE COUPLED SYSTEM FOR VISUALIZATION ======
 x0_cell = {[1; 2]; [data_x(1,1); data_v(1,1)]; [data_x(1,1); data_v(1,1); reshape(eye(2), [4,1])]};
-tspan = [0, 15];
+tspan = [0, 2];
 jspan = [0, 5000];
 
 sol = sys.solve(x0_cell, tspan, jspan, config);
@@ -117,6 +117,37 @@ ylabel('$v-v_{ref}$', 'Interpreter', 'latex');
 title(sprintf('Distribution of points before 2nd jump (t=%.2f)', t_after_2));
 axis equal;
 grid on;
+
+
+%% ====== PLOT EMPIRICAL PROBABILITY OF w^T x > 0 OVER TIME ======
+w = [1; 0];
+
+n_times = size(data_t, 1);
+probability_positive = nan(n_times, 1);
+time_axis = nan(n_times, 1);
+
+for k = 1:n_times
+    current_t = data_t(k);
+    disp(current_t);
+    linear_indices_current_t = indices_from_time(current_t, data_t, data_x);
+
+    err = [data_x(linear_indices_current_t) - data_x_ref(linear_indices_current_t); ...
+            data_v(linear_indices_current_t) - data_v_ref(linear_indices_current_t)];
+    probability_positive(k) = mean(((w'*err + data_x_ref(linear_indices_current_t)) < 0));
+    disp(sprintf('Time: %.2f, Probability: %.4f', current_t, probability_positive(k)));
+    time_axis(k) = current_t;
+    
+end
+
+%valid_plot = ~isnan(probability_positive) & ~isnan(time_axis);
+disp(size(time_axis));
+figure(8);
+plot(time_axis, probability_positive, 'LineWidth', 2);
+xlabel('Time $t$', 'Interpreter', 'latex');
+ylabel('Empirical probability $\mathbb{P}(w^\top x > 0)$', 'Interpreter', 'latex');
+title('Empirical probability of the event over time');
+grid on;
+ylim([0, 1]);
 
 
 %% ====== SALTATION MATRIX ANALYSIS - FIRST JUMP ======
