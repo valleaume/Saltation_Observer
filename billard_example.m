@@ -15,7 +15,7 @@ sys.setInput('Observer', obs_input);
 % X_0 is first element of cell
 disp(sys_copy.init_cond([0.5, 0.5, 7*pi/4]));
 disp(sys_copy.init_cond([0.5, 0.3, pi/3]));
-x0_cell = {[0.5; 0.5; 7*pi/4], sys_copy.init_cond([0.5; 0.61; 7.7*pi/4])};
+x0_cell = {[0.5; 0.51; 7*pi/4], sys_copy.init_cond([0.55; 0.61; 8.7*pi/4])};
 tspan = [0, 149];
 jspan = [0, 180];
 
@@ -29,58 +29,90 @@ hpb = HybridPlotBuilder().subplots('on')...
     .legend('$x_b$', '$y_b$', '$\theta_b$')...
     .plotFlows(sol('Billard').select(1:3));
 grid on;
+title('Billard state trajectories');
+xlabel('Time');
+ylabel('State value');
 
 figure(2)
 hpb = HybridPlotBuilder().subplots('on')...
     .plotPhase(sol('Billard'));
 grid on;
+title('Billard phase portrait');
+xlabel('x');
+ylabel('y');
 
 figure(3)
-plot(sol('Billard').x(:,1), sol('Billard').x(:,2));
+plot(sol('Billard').x(:,1), sol('Billard').x(:,2), 'LineWidth', 1.5);
 grid on;
 hold on;
-plot(sol('Observer').x(:,1), sol('Observer').x(:,3));
-hold on;
+plot(sol('Observer').x(:,1), sol('Observer').x(:,3), 'LineWidth', 1.5);
 theta = pi/2;
 x_0 = cos(2*pi/3);
 y_0 = sin(2*pi/3);
-plot([x_0 - cos(theta); x_0 ], [y_0 - sin(theta); y_0 ], "Color", 'r');
+plot([x_0 - cos(theta); x_0 ], [y_0 - sin(theta); y_0 ], 'Color', 'r', 'LineWidth', 1.5);
 x_plus = sys_billard.jumpMap([x_0; y_0; theta]);
 theta_plus = x_plus(3);
-hold on;
-plot([x_0; x_0 + cos(theta_plus)], [y_0; y_0 + sin(theta_plus)],  "Color", 'b');
-hold on;
+plot([x_0; x_0 + cos(theta_plus)], [y_0; y_0 + sin(theta_plus)], 'Color', 'b', 'LineWidth', 1.5);
 theta = linspace(-pi, pi);
-plot(cos(theta), sin(theta));
-hold on;
-plot([x_0, 0], [y_0, 0], "LineStyle", '--')
+plot(cos(theta), sin(theta), 'LineWidth', 1.2);
+plot([x_0, 0], [y_0, 0], 'LineStyle', '--', 'LineWidth', 1.2);
+title('Billard and observer trajectories');
+xlabel('x');
+ylabel('y');
+legend('Billard trajectory', 'Observer trajectory', 'Incoming angle', 'Outgoing angle', 'Unit circle', 'Line to origin', 'Location', 'best');
 
 figure(4)
 plot(sol('Billard').t, sol('Billard').x(:,1).^2+ sol('Billard').x(:,2).^2, 'o-', 'LineWidth', 2);
+title('Billard position norm squared');
+xlabel('Time');
+ylabel('||[x,y]||^2');
+legend('Norm squared', 'Location', 'best');
 disp(sys_billard.normal_angle([1,1]))
 
 figure(6)
-plot(sol('Observer').t, sol('Observer').x(:,5))
+plot(sol('Observer').t, sol('Observer').x(:,5), 'LineWidth', 1.5)
 hold on;
-plot(sol('Billard').t, sol('Billard').x(:,3))
+plot(sol('Billard').t, sol('Billard').x(:,3), 'LineWidth', 1.5)
+title('Observer and billard angles');
+xlabel('Time');
+ylabel('Angle');
+legend('Observer angle', 'Billard angle', 'Location', 'best');
 
 figure(7)
-plot(sol('Observer').t, sol('Observer').x(:,3))
+plot(sol('Observer').t, sol('Observer').x(:,3), 'LineWidth', 1.5)
 hold on;
-plot(sol('Billard').t, sol('Billard').x(:,2))
+plot(sol('Billard').t, sol('Billard').x(:,2), 'LineWidth', 1.5)
+title('Observer and billard vertical coordinate');
+xlabel('Time');
+ylabel('Coordinate');
+legend('Observer y', 'Billard y', 'Location', 'best');
 
 figure(9)
 subplot(3,1,1);
-plot(sol('Observer').t, sol('Observer').x(:,3) - sol('Billard').x(:,2));
+plot(sol('Observer').t, sol('Observer').x(:,3) - sol('Billard').x(:,2), 'LineWidth', 1.5);
+title('Vertical coordinate error');
+ylabel('Observer y - Billard y');
+legend('y error', 'Location', 'best');
 subplot(3, 1, 2);
-plot(sol('Observer').t, sol('Observer').x(:,1) - sol('Billard').x(:,1));
+plot(sol('Observer').t, sol('Observer').x(:,1) - sol('Billard').x(:,1), 'LineWidth', 1.5);
+title('Horizontal coordinate error');
+ylabel('Observer x - Billard x');
+legend('x error', 'Location', 'best');
 subplot(3, 1, 3);
-plot(sol('Observer').t, sol('Observer').x(:,5) - sol('Billard').x(:,3));
+plot(sol('Observer').t, sol('Observer').x(:,5) - sol('Billard').x(:,3), 'LineWidth', 1.5);
+title('Angle error');
+xlabel('Time');
+ylabel('Observer theta - Billard theta');
+legend('theta error', 'Location', 'best');
 
 figure(8)
-plot(sol('Observer').t, sol('Observer').x(:,1))
+plot(sol('Observer').t, sol('Observer').x(:,1), 'LineWidth', 1.5)
 hold on;
-plot(sol('Billard').t, sol('Billard').x(:,1))
+plot(sol('Billard').t, sol('Billard').x(:,1), 'LineWidth', 1.5)
+title('Observer and billard horizontal coordinate');
+xlabel('Time');
+ylabel('Coordinate');
+legend('Observer x', 'Billard x', 'Location', 'best');
 
 figure(5)
 % Define a 3D grid
@@ -92,18 +124,19 @@ v = sin(z);   % y-component
 w = 0*sin(z);   % z-component
 
 % Plot the vector field
-quiver3(x, y, z, u, v, w, 'AutoScale', 'on', 'LineWidth', 1.5, 'Color', 'b');
+hq = quiver3(x, y, z, u, v, w, 'AutoScale', 'on', 'LineWidth', 1.5, 'Color', 'b');
 xlabel('X');
 ylabel('Y');
 zlabel('Z');
-title('3D Flow Vectors (Vector Field: F = [-y, x, z])');
+title('3D flow vectors');
 grid on;
 axis equal;
 hold on;
 
 % Add streamlines for better visualization (optional)
 start_points = [0, 0, -2; 0, 0, -1; 0, 0, 0; 0, 0, 1; 0, 0, 2];
-streamline(x, y, z, u, v, w, start_points(:,1), start_points(:,2), start_points(:,3), 'LineWidth', 2, 'Color', 'r');
+hs = streamline(x, y, z, u, v, w, start_points(:,1), start_points(:,2), start_points(:,3), 'LineWidth', 2, 'Color', 'r');
 hold on;
 theta = linspace(-pi, pi);
 plot3(cos(theta), sin(theta), theta+pi/2)
+%legend([hq hs], 'Vector field', 'Streamlines', 'Location', 'best');
