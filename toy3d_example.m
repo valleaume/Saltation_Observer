@@ -5,17 +5,15 @@ close all;
 sys_plant = Toy3DSystemClass();
 sys_obs = Toy3DObserverClass();
 
-% Tune the observer gain and reset law.    1.4200
-    0.4680
-         0
-sys_obs.Lc = [3; 2; 0; 0]; 
-sys_obs.Ld_plus = [  379.2145;
-                     295.8483;
-                     -0.9388;
+% Tune the observer gain and reset law.
+sys_obs.Lc = [1.4200; 0.4680  ; 0; 0]; 
+sys_obs.Ld_plus = [ -1.7507;
+                    -4.6932;
+                    -1.9370;
                     0];
-sys_obs.Ld_minus = [46.1840;
-                    29.9735;
-                    -0.2051; 
+sys_obs.Ld_minus = [2.9170
+                    -2.2907;
+                    -0.0485; 
                     0];
 sys_obs.alpha = 0.;
 
@@ -25,12 +23,12 @@ obs_input = @(y_plant, ~) y_plant(:);
 sys.setInput('Observer', obs_input);
 
 % Initial conditions for the 4-state plant and observer.
-x0_plant = [0.0; 0.1; 1; 1.0];
-x0_obs = [0.02; 0.12; 1.01; 1.0];
+x0_plant = [0.0; 0.1; 1; -1.0];
+x0_obs = [0.05; 0.12; 0.93; -1.0];
 x0_cell = {x0_plant, x0_obs};
 
 % Simulation horizon.
-tspan = [0, 100];
+tspan = [0, 25];
 jspan = [0, 700];
 
 % Define solver parameters.
