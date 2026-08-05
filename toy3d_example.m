@@ -5,10 +5,19 @@ close all;
 sys_plant = Toy3DSystemClass();
 sys_obs = Toy3DObserverClass();
 
-% Tune the observer gain and reset law.
-%sys_obs.Lc = [4; 5; 0; 0];
-sys_obs.Ld = [0; 0*3; 2; 0];
-sys_obs.alpha = 0.5;
+% Tune the observer gain and reset law.    1.4200
+    0.4680
+         0
+sys_obs.Lc = [3; 2; 0; 0]; 
+sys_obs.Ld_plus = [  379.2145;
+                     295.8483;
+                     -0.9388;
+                    0];
+sys_obs.Ld_minus = [46.1840;
+                    29.9735;
+                    -0.2051; 
+                    0];
+sys_obs.alpha = 0.;
 
 % Build the coupled plant-observer system.
 sys = CompositeHybridSystem('Plant', sys_plant, 'Observer', sys_obs);
@@ -17,11 +26,11 @@ sys.setInput('Observer', obs_input);
 
 % Initial conditions for the 4-state plant and observer.
 x0_plant = [0.0; 0.1; 1; 1.0];
-x0_obs = [0.02; 0.12; 1.000001; 1.0];
+x0_obs = [0.02; 0.12; 1.01; 1.0];
 x0_cell = {x0_plant, x0_obs};
 
 % Simulation horizon.
-tspan = [0, 2400];
+tspan = [0, 100];
 jspan = [0, 700];
 
 % Define solver parameters.

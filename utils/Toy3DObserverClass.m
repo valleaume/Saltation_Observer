@@ -7,7 +7,8 @@ classdef Toy3DObserverClass < HybridSubsystem
         B = [0; 1; 0; 0];
         speed = 1;    % Speed 
         Lc = [5; 6; 0; 0]; % observer gain
-        Ld = [0; 3; 2; 0]; % observer gain
+        Ld_plus = [0; 3; 2; 0]; % observer gain
+        Ld_minus = [0; 3; 2; 0]; % observer gain
         alpha = 0.5;
         C = [1, 0, 0, 0];
     end
@@ -54,10 +55,10 @@ classdef Toy3DObserverClass < HybridSubsystem
 
             if q == 1     
                 xplus(this.wall_index) = this.alpha*x2 + (1-this.alpha)*x3;
-                xplus =  x + this.Ld*(y-this.C*x);
+                xplus =  x + this.Ld_plus*(y-this.C*x);
             else
                 xplus(this.wall_index) = -this.alpha*x2 + (1-this.alpha)*x3;
-                xplus =  x + this.Ld*(y-this.C*x);
+                xplus =  x + this.Ld_minus*(y-this.C*x);
             end
     
             xplus(this.mode_index) = q_new;
