@@ -3,13 +3,14 @@ classdef Toy3DObserverClass < HybridSubsystem
 
     % Define variable properties that can be modified.
     properties
-        A = [0, 1, 0, 0; 0, 0, 0, 0; 0, 0, 0, 0; 0, 0, 0, 0];
+        A = [-0.5, 1, 0, 0; 0, 0, 0, 0; 0, 0, 0, 0; 0, 0, 0, 0];  %filtering trick, this ain't no toy model but a bouncing ball witth perfect restitution
         B = [0; 1; 0; 0];
         speed = 1;    % Speed 
         Lc = [5; 6; 0; 0]; % observer gain
         Ld_plus = [0; 3; 2; 0]; % observer gain
         Ld_minus = [0; 3; 2; 0]; % observer gain
         alpha = 0.5;
+        lambda = 0.5;
         C = [1, 0, 0, 0];
     end
     
@@ -74,6 +75,7 @@ classdef Toy3DObserverClass < HybridSubsystem
         end
         function inD = jumpSetIndicator(this, x, u, t, j)
             % Extract the state components.
+            x1 = x(this.position_index);
             x2 = x(this.velocity_index);
             x3 = x(this.wall_index);
             q = x(this.mode_index);

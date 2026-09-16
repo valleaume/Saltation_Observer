@@ -23,12 +23,12 @@ obs_input = @(y_plant, ~) y_plant(:);
 sys.setInput('Observer', obs_input);
 
 % Initial conditions for the 4-state plant and observer.
-x0_plant = [0.0; 0.1; 1; -1.0];
-x0_obs = [0.05; 0.12; 0.93; -1.0];
+x0_plant = [0.3; 0.1; 0.5; -1.0];
+x0_obs = [0.05; 0.12; 0.593; -1.0];
 x0_cell = {x0_plant, x0_obs};
 
 % Simulation horizon.
-tspan = [0, 25];
+tspan = [0, 40];
 jspan = [0, 700];
 
 % Define solver parameters.

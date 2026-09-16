@@ -3,7 +3,7 @@ classdef Toy3DSystemClass < HybridSubsystem
 
     % Define variable properties that can be modified.
     properties
-        A = [0, 1, 0, 0; 0, 0, 0, 0; 0, 0, 0, 0; 0, 0, 0, 0];
+        A = [-0.5, 1, 0, 0; 0, 0, 0, 0; 0, 0, 0, 0; 0, 0, 0, 0];  %filtering trick, this ain't no toy model but a bouncing ball witth perfect restitution
         B = [0; 1; 0; 0];
         speed = 1;    % Speed 
     end
