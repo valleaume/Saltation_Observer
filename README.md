@@ -6,17 +6,100 @@ Related paper : [Saltation-Based analysis of estimation error in observers for h
 ## Requirements
 Requires MATLAB 2024b or higher, the [Hybrid Equations Toolbox](https://mathworks.com/matlabcentral/fileexchange/41372-hybrid-equations-toolbox) package.
 
-## Content
+## Repository Overview
 
-The `observers.m` file is the main script.\
-`draw_figures.m` reproduces all figures of the [paper](https://hal.parisnanterre.fr/ENSMP_CAS/hal-05273106).
+The repository is organized around hybrid bouncing-ball observer examples and
+the analysis of their flow and jump error dynamics.
 
-The `/utils` folder contains mutiple class definitions.
-- `BouncingBallSubSystem` is a class modelizing bouncing ball as a `HybridSubSystem`.
-- `BouncingBallObserver` is a class modelizing the constant gain observer as a `HybridSubSystem`.
-- Both K_search files look for appropriate gains regarding the spectral radius of both matrices. One does so by solving LMI while the other performs a naive gridsearch.
+- `observers.m` is the main known-ground observer example.
+- `draw_figures.m` reproduces and exports the figures associated with the conference [paper](https://hal.parisnanterre.fr/ENSMP_CAS/hal-05273106).
+- `observersCovarianceConfig.m`, `observersCovarianceDataGeneration.m`, and
+	`observersCovariancePlots.m` form the modular covariance-analysis workflow.
+	Configuration, data generation, and plotting are kept separate so plots can
+	be regenerated without rerunning the simulations.
+- `observersCovarianceAnalysis.m` is the original all-in-one covariance script
+	kept as a reference implementation.
+- `print_observer_figures.m` runs selected observer plotting scripts and exports
+	their figures as publication-ready PDFs.
+- `UnknownGroundObserver.m` is a separate unknown-ground example described
+	below.
+- `utils/` contains the hybrid-system classes, observer implementations,
+	plotting helpers, solver-related utilities, and PDF-export functions used by
+	the scripts.
+- `data/` contains generated `.mat` datasets and saved configuration files.
+- `figures/` contains generated figures, PDFs, and other paper artwork.
+- `Examples/` contains other exploratory or standalone work. These files are
+	useful for experiments and demonstrations, but are not required for the
+	main observer or covariance workflows described here.
 
-## Examples of interest 
+The repository also contains search and analysis scripts such as
+`K_search_LMI.m`, `K_search_naive.m`, `K_search_YALMIP.m`, and
+`JSR_LMI_search.m`. They investigate observer gains and contraction or joint
+spectral-radius conditions using different numerical approaches.
+
+## Unknown-Ground Observer
+
+`UnknownGroundObserver.m` studies a bouncing ball whose ground height is
+unknown to the observer. The augmented state is
+
+```text
+x = [height; velocity; ground height]
+```
+
+The observer estimates all three quantities from the measured absolute
+position. During continuous flow, the ground-height state is constant and
+does not appear in the measured dynamics, so its error cannot be corrected by
+the flow gain. Information about the ground height arrives through the impact
+events, which makes this script a useful example of jump-driven estimation
+and of the difference between flow and jump observability.
+
+The script configures an `UnknownGroundBallSubSystem` and an
+`UnknownGroundBallObserver`, simulates their coupled system, and plots the
+resulting states, estimation errors, and a Lyapunov-type contraction measure.
+It is a separate numerical example from the standard known-ground bouncing
+ball observer and currently serves as experimental/journal-version work; read
+the script comments before relying on its numerical results.
+
+## Reproducing and Exporting Figures
+
+Run the scripts from the repository root in MATLAB. Both scripts add the
+`utils` folder to the MATLAB path and create their output folder if needed.
+
+### `draw_figures.m`
+
+Run:
+
+```matlab
+run('draw_figures.m')
+```
+
+This script simulates the bouncing-ball observer examples and exports the
+figures to `figures/CDC` as PDFs. It generates the phase, position, velocity,
+observer-error, norm-error, and synchronization figures. The system gains,
+initial conditions, time spans, and output folder can be edited at the top of
+the script or in the corresponding plotting sections.
+
+### `print_observer_figures.m`
+
+The repository uses the filename `print_observer_figures.m` for the observer
+figure export script. Run:
+
+```matlab
+run('print_observer_figures.m')
+```
+
+The script first runs `observersCovariancePlots.m`, which loads the dataset
+selected by `data_to_load` near the top of that script. It exports the
+before/after covariance error figures, then runs `UnknownGroundObserver.m` and
+exports the unknown-ground observer figures. The PDFs are written to
+`figures/TAC`.
+
+To use another covariance dataset, change `data_to_load` in
+`observersCovariancePlots.m` and make sure the corresponding `.mat` file is in
+the `data/` folder. The covariance data must already have been generated by
+`observersCovarianceDataGeneration.m` or supplied in the repository.
+
+## Examples of interest for the bouncing ball
 
 Every computations are made with $x_0 = [5, 2]^\top$.
 - Current numerical values $L_c = [0.8, 0.6]^\top, L_d = [0.1, 0.1]^\top, K = [0; 0]^\top$ provide an illustration of local stability of the observer design when all conditions are met. Observer initialized at $\hat{x}_0 = 0.4x_0$.
