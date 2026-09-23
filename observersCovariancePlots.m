@@ -128,13 +128,12 @@ time_axis = nan(n_times, 1);
 
 for k = 1:n_times
     current_t = data_t(k);
-    disp(current_t);
+    % disp(current_t);
     linear_indices_current_t = indices_from_time(current_t, data_t, data_x);
 
     err = [data_x(linear_indices_current_t) - data_x_ref(linear_indices_current_t); ...
             data_v(linear_indices_current_t) - data_v_ref(linear_indices_current_t)];
     probability_positive(k) = mean(((w'*err + data_x_ref(linear_indices_current_t)) < 0));
-    disp(sprintf('Time: %.2f, Probability: %.4f', current_t, probability_positive(k)));
     time_axis(k) = current_t;
     
 end
