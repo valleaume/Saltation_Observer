@@ -13,14 +13,12 @@ the analysis of their flow and jump error dynamics.
 
 - `observers.m` is the main known-ground observer example.
 - `draw_figures.m` reproduces and exports the figures associated with the conference [paper](https://hal.parisnanterre.fr/ENSMP_CAS/hal-05273106).
-- `observersCovarianceConfig.m`, `observersCovarianceDataGeneration.m`, and
+- `observersCovarianceDataGeneration.m`, and
 	`observersCovariancePlots.m` form the modular covariance-analysis workflow.
 	Configuration, data generation, and plotting are kept separate so plots can
 	be regenerated without rerunning the simulations.
-- `observersCovarianceAnalysis.m` is the original all-in-one covariance script
-	kept as a reference implementation.
 - `print_observer_figures.m` runs selected observer plotting scripts and exports
-	their figures as publication-ready PDFs.
+	their figures as PDFs.
 - `UnknownGroundObserver.m` is a separate unknown-ground example described
 	below.
 - `utils/` contains the hybrid-system classes, observer implementations,
@@ -33,8 +31,7 @@ the analysis of their flow and jump error dynamics.
 	main observer or covariance workflows described here.
 
 The repository also contains search and analysis scripts such as
-`K_search_LMI.m`, `K_search_naive.m`, `K_search_YALMIP.m`, and
-`JSR_LMI_search.m`. They investigate observer gains and contraction or joint
+`JSR_LMI_search.m`, `K_search_LMI.m`, `K_search_naive.m`, `K_search_YALMIP.m`. They investigate observer gains and contraction or joint
 spectral-radius conditions using different numerical approaches.
 
 ## Unknown-Ground Observer
@@ -56,9 +53,6 @@ and of the difference between flow and jump observability.
 The script configures an `UnknownGroundBallSubSystem` and an
 `UnknownGroundBallObserver`, simulates their coupled system, and plots the
 resulting states, estimation errors, and a Lyapunov-type contraction measure.
-It is a separate numerical example from the standard known-ground bouncing
-ball observer and currently serves as experimental/journal-version work; read
-the script comments before relying on its numerical results.
 
 ## Reproducing and Exporting Figures
 
