@@ -81,18 +81,17 @@ the script or in the corresponding plotting sections.
 
 ### `draw_paper_figures.m`
 
-The repository uses the filename `print_observer_figures.m` for the observer
-figure export script. Run:
+This script exports the observer and covariance figures used in the paper.
+Run:
 
 ```matlab
-run('print_observer_figures.m')
+run('draw_paper_figures.m')
 ```
 
-The script first runs `observersCovariancePlots.m`, which loads the dataset
-selected by `data_to_load` near the top of that script. It exports the
-before/after covariance error figures, then runs `UnknownGroundObserver.m` and
-exports the unknown-ground observer figures. The PDFs are written to
-`figures/TAC`.
+It first runs `observersCovariancePlots.m`, which loads the dataset selected by
+`data_to_load` near the top of that script and exports the before/after
+covariance error figures. It then runs `UnknownGroundObserver.m` and exports
+the unknown-ground observer figures. All PDFs are written to `figures/TAC`.
 
 To use another covariance dataset, change `data_to_load` in
 `observersCovariancePlots.m` and make sure the corresponding `.mat` file is in

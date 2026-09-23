@@ -1,4 +1,4 @@
-%% print_observer_figures - Generate and export observer-analysis figures
+%% draw_paper_figures - Generate and export observer-analysis figures
 %
 % Runs the two observer plotting scripts and saves their figures as PDFs in
 % the figures folder. The covariance dataset is selected in
