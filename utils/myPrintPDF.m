@@ -1,4 +1,4 @@
-function MyPrintPDF(fig_h, filename, size_inch)
+function MyPrintPDF(fig_h, filename, size_inch, legend_padding)
     % Export a figure as a tightly sized, vector PDF.
     % All axes in the figure are included, including subplot/tiled layouts.
 
@@ -18,14 +18,25 @@ function MyPrintPDF(fig_h, filename, size_inch)
             'size_inch must contain two positive dimensions in inches.');
     end
     size_inch = reshape(size_inch, 1, 2);
+    if nargin < 4 || isempty(legend_padding)
+        legend_padding = [];
+    elseif ~isnumeric(legend_padding) || ~isscalar(legend_padding) || legend_padding < 0
+        error('MyPrintPDF:InvalidLegendPadding', ...
+            'legend_padding must be a nonnegative scalar.');
+    end
+
+    % Apply PDF-specific formatting to a copy so the displayed figure is unchanged.
+    export_fig = copyobj(fig_h, 0);
+    set(export_fig, 'Visible', 'off');
+    delete_export_figure = onCleanup(@() close(export_fig));
 
     [folder, base_name, extension] = fileparts(filename);
     if isempty(extension) || ~strcmpi(extension, '.pdf')
         filename = fullfile(folder, [base_name, '.pdf']);
     end
 
-    axes_handles = findall(fig_h, 'Type', 'axes');
-    legend_handles = findall(fig_h, 'Type', 'Legend');
+    axes_handles = findall(export_fig, 'Type', 'axes');
+    legend_handles = findall(export_fig, 'Type', 'Legend');
 
     % Hide titles only for the export; the source figure is restored on exit.
     title_handles = gobjects(0, 1);
@@ -52,10 +63,29 @@ function MyPrintPDF(fig_h, filename, size_inch)
     end
 
     for legend_index = 1:numel(legend_handles)
-        set(legend_handles(legend_index), 'Interpreter', 'latex', 'FontSize', 25);
+        old_legend = legend_handles(legend_index);
+        legend_children = get(old_legend, 'PlotChildren');
+        legend_strings = get(old_legend, 'String');
+        legend_location = get(old_legend, 'Location');
+        legend_box = get(old_legend, 'Box');
+        legend_line_width = get(old_legend, 'LineWidth');
+
+        if ~isempty(legend_children) && ~isempty(legend_strings)
+            legend_axes = ancestor(legend_children(1), 'axes');
+            delete(old_legend);
+            new_legend = legend(legend_axes, legend_children, legend_strings, ...
+                'Interpreter', 'latex', ...
+                'FontSize', 25, ...
+                'Box', legend_box, ...
+                'LineWidth', legend_line_width, ...
+                'Location', legend_location);
+
+            drawnow;
+            set(new_legend, 'Units', 'normalized');
+        end
     end
 
-    figure_text = findall(fig_h, 'Type', 'text');
+    figure_text = findall(export_fig, 'Type', 'text');
     for text_index = 1:numel(figure_text)
         text_tag = get(figure_text(text_index), 'Tag');
         if strcmpi(text_tag, 'sgtitle') || strcmpi(text_tag, 'suptitle')
@@ -68,14 +98,14 @@ function MyPrintPDF(fig_h, filename, size_inch)
     restore_titles = onCleanup(@() restoreTitleVisibility( ...
         title_handles, title_visibility));
 
-    set(fig_h, 'Units', 'inches', ...
+    set(export_fig, 'Units', 'inches', ...
         'Position', [0.2, 0.2, size_inch], ...
         'PaperUnits', 'inches', ...
         'PaperPosition', [0, 0, size_inch], ...
         'PaperSize', size_inch, ...
         'PaperPositionMode', 'manual');
 
-    print(fig_h, filename, '-dpdf', '-painters');
+    print(export_fig, filename, '-dpdf', '-painters');
 end
 
 function restoreTitleVisibility(title_handles, title_visibility)

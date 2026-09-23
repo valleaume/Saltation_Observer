@@ -1,6 +1,11 @@
 addpath('utils');
 close all;
 
+figures_folder = fullfile(pwd, 'figures\CDC');
+if ~isfolder(figures_folder)
+    mkdir(figures_folder);
+end
+
 % ReCreate the BouncingBall object.
 sys = ObserverBouncingBallSystemClass();
 sys.mu =0;% 2; % Additional velocity at each impact %2
@@ -38,7 +43,7 @@ ylabel('$x_2$', Interpreter= 'latex');
 cl = legend('$x$', '$\hat{x}$', Interpreter = 'latex');
 cf.CurrentAxes.XLim = [-0.5, 5.5];
 
-myPrintPDF(cf,  'figures\Miss_jump');
+myPrintPDF(cf, fullfile(figures_folder, 'Miss_jump'));
 
 %% Position
 cf = figure(2);
@@ -52,7 +57,7 @@ cl =legend('$x$', '$\hat{x}$',Interpreter = 'latex');
 cf.CurrentAxes.XLim = [0, 16];
 cf.CurrentAxes.YLim = [-0.6, 6];
 
-myPrintPDF(cf,  'figures\Miss_jump_x');
+myPrintPDF(cf, fullfile(figures_folder, 'Miss_jump_x'));
 %% Velocity
 
 cf = figure(3);
@@ -65,7 +70,7 @@ ylabel('$x_2$', Interpreter= 'latex');
 legend('$x$', '$\hat{x}$',Interpreter = 'latex');
 cf.CurrentAxes.XLim = [0, 16];
 
-myPrintPDF(cf,  'figures\Miss_jump_v');
+myPrintPDF(cf, fullfile(figures_folder, 'Miss_jump_v'));
 
 
 %%
@@ -131,11 +136,11 @@ plot(sol_unstable('Ball').t, sol_unstable('Ball').x(:,1) - sol_unstable('Observe
 grid on;
 xlabel('$t$', Interpreter= 'latex');
 ylabel('$x_1- \hat{x}_1$', Interpreter= 'latex');
-legend("$\mathcal{M}_{ \rm after}$ stable", "$\mathcal{M}_{ \rm after}$ unstable")
+legend("$\mathcal{M}_{ \rm after}$ stable", "$\mathcal{M}_{ \rm after}$ unstable", 'Interpreter', 'Latex', Box = 'off');
 title( "Position error");
 cf.CurrentAxes.XLim = [0, 85];
 
-myPrintPDF(cf, 'figures\Position error')
+myPrintPDF(cf, fullfile(figures_folder, 'Position error'))
 
 %% Plot velocity error
 cf = figure(5);
@@ -145,12 +150,12 @@ plot(sol_unstable('Ball').t, sol_unstable('Ball').x(:,2) - sol_unstable('Observe
 grid on;
 xlabel('$t$', Interpreter= 'latex');
 ylabel('$x_1- \hat{x}_1$', Interpreter= 'latex');
-legend("$\mathcal{M}_{ \rm after}$ stable", "$\mathcal{M}_{ \rm after}$ unstable")
+legend("$\mathcal{M}_{ \rm after}$ stable", "$\mathcal{M}_{ \rm after}$ unstable", 'Interpreter', 'Latex', Box = 'off');
 title( "Velocity error");
 
 cf.CurrentAxes.XLim = [0, 75];
 
-myPrintPDF(cf, 'figures\Velocity error')
+myPrintPDF(cf, fullfile(figures_folder, 'Velocity error'))
 
 %% Plot norm of error
 
@@ -173,7 +178,7 @@ plot(sol_stable('Ball').t(far_jump_mask_stable), diag(e_stable*P*e_stable'), col
 hold on;
 grid on;
 plot(sol_unstable('Ball').t(far_jump_mask_unstable), diag(e_unstable*P*e_unstable'),  'Linestyle', ":", color='red'); 
-legend("$\mathcal{M}_{ \rm after}$ stable", "$\mathcal{M}_{ \rm after}$ unstable")
+legend("$\mathcal{M}_{ \rm after}$ stable", "$\mathcal{M}_{ \rm after}$ unstable", 'Interpreter', 'Latex', Box = 'off', Location = 'best');
 xlabel('$t$', 'Interpreter', 'Latex')
 ylabel('$\|x-\hat{x}\|^2$',  'Interpreter', 'Latex')
 %title("Norm error");
@@ -181,7 +186,7 @@ ylabel('$\|x-\hat{x}\|^2$',  'Interpreter', 'Latex')
 cf.CurrentAxes.XLim = [0, 70];
 cf.CurrentAxes.YLim = [0, 0.16];
 
-myPrintPDF(cf, 'figures\Norm_error')
+myPrintPDF(cf, fullfile(figures_folder, 'Norm_error'))
 
 %% Generate Stable Result
 
@@ -224,7 +229,8 @@ ylabel('$x_2$' , 'Interpreter', 'Latex')
 legend('$x$', '$\hat{x}$', 'Interpreter', 'Latex')
 xlim([0, 25]);
 
-myPrintPDF(cf, 'figures\Norm_error_stable_no_mask')
+myPrintPDF(cf, fullfile(figures_folder, 'Norm_error_stable_no_mask'));
+myPrintPDF(cf, fullfile(figures_folder, '../TAC/Norm_error_stable_no_mask'));
 
 %% Synchronization error
 
@@ -266,8 +272,8 @@ plot(sol_non_synchronized('Ball').t, sol_non_synchronized('Observer').x(:,1), 'L
 grid on;
 xlabel('$t$', Interpreter= 'latex');
 ylabel('$x_1$', Interpreter= 'latex');
-legend("$x$", "$\hat{x}_{\rm known}$", "$\hat{x}_{\rm unknown}$")
+legend("$x$", "$\hat{x}_{\rm known}$", "$\hat{x}_{\rm unknown}$", 'Interpreter', 'Latex');
 cf.CurrentAxes.XLim = [0, 16];
 cf.CurrentAxes.YLim = [-0.5, 11];
 
-myPrintPDF(cf, 'figures\Position_synchronization')
+myPrintPDF(cf, fullfile(figures_folder, 'Position_synchronization'));

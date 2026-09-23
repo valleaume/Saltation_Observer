@@ -110,8 +110,8 @@ plot(sol('Ball').t, sol('Ball').x(:,3), 'k--', 'LineWidth', 1.2); hold on;
 plot(sol('Observer').t, sol('Observer').x(:,3), 'Color', '#FF8800');
 grid on;
 xlabel('$t$','Interpreter','latex');
-ylabel('$x_3,\ \hat{x}_3$','Interpreter','latex');
-legend('true ground height','estimate','Location','best');
+ylabel('$x_3$','Interpreter','latex');
+legend('true ground height','estimate','Location','best', 'Location', 'northeast', 'Interpreter', 'latex', 'Box', 'off');
 title('Ground height is corrected only at jumps');
 
 %% Figure 3 : Lyapunov function, sampled at the SYSTEM jump times
@@ -133,7 +133,8 @@ xlabel('$t$','Interpreter','latex');
 ylabel('$\theta^\top P\,\theta$','Interpreter','latex');
 legend('measured at system jumps', ...
        sprintf('certified rate $\\gamma^2 = %.3f$', gamma2), ...
-       'Interpreter','latex','Location','best');
+       'Interpreter','latex','Location','best',...
+       'Box', 'off');
 title('Per-cycle contraction');
 
 fprintf('\nobserved per-cycle ratios:\n');
