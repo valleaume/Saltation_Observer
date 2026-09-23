@@ -51,6 +51,7 @@ P = [  5.35797  -1.79583 -14.14947;
       -1.79583   1.05090   5.71556;
      -14.14947   5.71556  45.89246 ];
 gamma2 = 0.4838;            % per-cycle contraction certified on +/-5%
+fprintf('certificate on P: max eig(P)= %.4f,  min eig(P) = %.4f\n', max(eig(P)), min(eig(P)));
 
 %% Coupled system
 sys = CompositeHybridSystem('Ball', sys_ball, 'Observer', sys_obs);

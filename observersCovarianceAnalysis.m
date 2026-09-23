@@ -257,7 +257,7 @@ figure(5);
 scatter(data_x(linear_indices_after_2)-data_x_ref(linear_indices_after_2), data_v(linear_indices_after_2)-data_v_ref(linear_indices_after_2), [], data_jumps(linear_indices_after), 'filled'); % use the color of whether they will jump or not
 colormap('jet');
 hold on;
-xline(0, "LineWidth", 1, "LineStyle", "-.")
+xline(0, "LineWidth", 1, "LineStyle", "-.");
 xlabel('$x-x_{ref}$', 'Interpreter', 'latex');
 ylabel('$v-v_{ref}$', 'Interpreter', 'latex');
 title(sprintf('Distribution of points before 2nd jump (t=%.2f)', t_after_2));

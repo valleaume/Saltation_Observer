@@ -78,6 +78,10 @@ scatter(data_x(linear_indices_after)-data_x_ref(linear_indices_after), ...
         data_v(linear_indices_after)-data_v_ref(linear_indices_after), ...
         [], data_jumps(linear_indices_after), 'filled');
 colormap('jet');
+hold on;
+scatter([0], [0], 0.100, 'filled', 'color', 'red');
+hold on;
+xline(0, "LineWidth", 1, "LineStyle", "-.");
 xlabel('$x-x_{ref}$', 'Interpreter', 'latex');
 ylabel('$v-v_{ref}$', 'Interpreter', 'latex');
 title(sprintf('Distribution of observer error after jump (t=%.2f)', t_after));
@@ -94,7 +98,9 @@ scatter(data_x(linear_indices_before)-data_x_ref(linear_indices_before), ...
         [], data_jumps(linear_indices_after), 'filled');
 colormap('jet');
 hold on;
-xline(0, "LineWidth", 1, "LineStyle", "-.")
+scatter([0], [0], 0.100, 'filled', 'color', 'red');
+hold on;
+
 xlabel('$x-x_{ref}$', 'Interpreter', 'latex');
 ylabel('$v-v_{ref}$', 'Interpreter', 'latex');
 title(sprintf('Distribution of observer error before jump (t=%.2f)', t_before));
@@ -143,7 +149,8 @@ disp(size(time_axis));
 figure(8);
 plot(time_axis, probability_positive, 'LineWidth', 2);
 xlabel('Time $t$', 'Interpreter', 'latex');
-ylabel('Empirical probability $\mathbb{P}(w^\top x > 0)$', 'Interpreter', 'latex');
+ylabel('Empirical probability $\mathrm{P}(w^\top x > 0)$', ...
+    'Interpreter', 'latex');
 title('Empirical probability of the event over time');
 grid on;
 ylim([0, 1]);
@@ -211,11 +218,23 @@ disp(M_after*cov(data_before(:, mask_jump_after)')*M_after');
 
 
 %% ====== VISUALIZE COVARIANCE ELLIPSES ======
-plot_ellipse(cov_before, mean(data_before, 2), 6, 'r');
-hold on
-plot_ellipse(M_before*cov_before*M_before', mean(M_before*data_before, 2), 7, 'b');
-plot_ellipse(M_after*cov_before*M_after', mean(M_after*data_before, 2), 7, 'g');
-legend('Before jump', 'M_{before} prediction', 'M_{after} prediction');
+plot_ellipse(cov_before, mean(data_before, 2), 6, ...
+    'LineWidth', 1, 'LineStyle', '-.');
+xline(0, "LineWidth", 1, "LineStyle", "-.");
+legend('jump after $x_{\rm ref}$', 'jump before $x_{\rm ref}$', ...
+    "covariance", ...
+    'hyperplane $\frac{\partial \hat{\omega}}{\partial \hat{x}}$', ...
+    'Interpreter', 'latex', 'Location', 'northeast');
+
+
+plot_ellipse(M_before*cov_before*M_before', mean(M_before*data_before, 2), 7, ...
+    'Color', 'red', 'LineWidth', 3);
+plot_ellipse(M_after*cov_before*M_after', mean(M_after*data_before, 2), 7, ...
+    'Color', 'blue', 'LineWidth', 3);
+legend('jump after $x_{\rm ref}$', 'jump before $x_{\rm ref}$', ...
+    'hyperplane $\frac{\partial \hat{\omega}}{\partial \hat{x}}$', ...
+    '$M_{\rm before}$', '$M_{\rm after}$', ...
+    'Interpreter', 'latex', 'Location', 'northeast');
 xlabel('$x-x_{ref}$', 'Interpreter', 'latex');
 ylabel('$v-v_{ref}$', 'Interpreter', 'latex');
 title('Covariance ellipses: measured vs. saltation predicted');
@@ -234,9 +253,4 @@ function linear_indices = indices_from_time(t, data_t, data_x)
 
     [rows, cols] = size(data_x);
     linear_indices = sub2ind([rows, cols], j_mat, 1:cols);
-end
-
-function unscented_points = unscentedTransform(point, cov)
-    % TODO: Implement unscented transform
-    % This function will generate sigma points from a point and covariance
 end
