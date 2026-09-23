@@ -79,7 +79,7 @@ observer-error, norm-error, and synchronization figures. The system gains,
 initial conditions, time spans, and output folder can be edited at the top of
 the script or in the corresponding plotting sections.
 
-### `print_observer_figures.m`
+### `draw_paper_figures.m`
 
 The repository uses the filename `print_observer_figures.m` for the observer
 figure export script. Run:
