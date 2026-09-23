@@ -38,8 +38,8 @@ sys_obs.f_air  = sys_ball.f_air;
 
 % Gains from the k=1 JSR LMI search (see JSR_LMI_search.m):
 %   omega = 7 rad/s, zeta = 0.25  ->  flow poles -1.75 +/- 6.78i
-sys_obs.L_c   = [3.5; 49.0; 0.0];
-sys_obs.L_d   = [1.5; -3.2; 1.0];
+sys_obs.L_c   = [2.25; 56.25; 0.0];
+sys_obs.L_d   = [1.4618; -1.6816; 0.9912];
 sys_obs.kappa = 0;          % Lemma 2 design (omega_hat independent of y)
 
 % BEWARE: L_d(3) = 0 is a degenerate point -- M_before(3,3) = 1 identically,
@@ -47,10 +47,10 @@ sys_obs.kappa = 0;          % Lemma 2 design (omega_hat independent of y)
 % Any gain search must be kept away from L_d(3) = 0.
 
 %% Certificate P for the Lyapunov plot (from the same LMI search)
-P = [  5.35797  -1.79583 -14.14947;
-      -1.79583   1.05090   5.71556;
-     -14.14947   5.71556  45.89246 ];
-gamma2 = 0.4838;            % per-cycle contraction certified on +/-5%
+P = [   2.6178   -0.1040   -4.0110
+   -0.1040    0.0419    0.2283
+   -4.0110    0.2283    6.6431 ];
+gamma2 = 0.2838;            % per-cycle contraction certified on +/-5%
 fprintf('certificate on P: max eig(P)= %.4f,  min eig(P) = %.4f\n', max(eig(P)), min(eig(P)));
 
 %% Coupled system
