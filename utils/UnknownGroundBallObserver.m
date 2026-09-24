@@ -3,7 +3,7 @@ classdef UnknownGroundBallObserver < HybridSubsystem
     %
     %   xhat = [xh1; xh2; xh3],  input y = x1,  r = y - xh1
     %
-    %   flow : xhatdot = [xh2; -gamma - sign(xh2)*f_air*xh2^2; 0] + L_c * r
+    %   flow : xhatdot = [xh2; -g - sign(xh2)*f_air*xh2^2; 0] + L_c * r
     %   jump : xhat+   = [xh3; -lambda*xh2 + mu; xh3]             + L_d * r
     %
     % Observer guard (kappa = 0 recovers the Lemma-2 design with O_D = { xh2 <= zeno_margin}, omega_hat
@@ -21,7 +21,7 @@ classdef UnknownGroundBallObserver < HybridSubsystem
     properties
         lambda = 0.5;
         mu     = 2.0;
-        gamma  = 9.8;
+        g      = 9.8;
         f_air  = 0.0;
         zeno_margin = 1e-6;  % margin for omega_hat <= 0 to avoid Zeno
 
@@ -41,7 +41,7 @@ classdef UnknownGroundBallObserver < HybridSubsystem
         function xdot = flowMap(this, xhat, y, ~, ~)
             r = y - xhat(1);
             xdot = [ xhat(2);
-                    -this.gamma - sign(xhat(2))*this.f_air*xhat(2)^2;
+                    -this.g - sign(xhat(2))*this.f_air*xhat(2)^2;
                      0 ] + this.L_c * r;
         end
 
@@ -90,7 +90,7 @@ classdef UnknownGroundBallObserver < HybridSubsystem
         end
 
         function [Xi, H, Htil] = saltationFactors(this, v)
-            e = this.lambda;  g = this.gamma;  m = this.mu;
+            e = this.lambda;  g = this.g;  m = this.mu;
             x2 = -v;
             dgdx  = [0 0 1; 0 -e 0; 0 0 1];
             N     = [e*x2 - m; g*(1+e); 0];      % dg/dx*f - f(g(x))

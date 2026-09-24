@@ -3,7 +3,7 @@ classdef BouncingBallSubSystemClass < HybridSubsystem
 
     % Define variable properties that can be modified.
     properties
-        gamma = 9.8;  % Acceleration due to gravity.
+        g = 9.8;      % Acceleration due to gravity.
         lambda = 0.8; % Coefficient of restitution.
         mu = 2;       % Coefficient of additive velocity.
         f_air = 0.01; % Coefficient of air friction.
@@ -40,7 +40,7 @@ classdef BouncingBallSubSystemClass < HybridSubsystem
             % Extract the state components.
             v = x(this.velocity_index);
             % Define the value of the flow map f(x). 
-            xdot = [v; -this.gamma - sign(v) * this.f_air*v^2];
+            xdot = [v; -this.g - sign(v) * this.f_air*v^2];
         end
         function xplus = jumpMap(this, x, u, t, j)
             % Extract the state components.

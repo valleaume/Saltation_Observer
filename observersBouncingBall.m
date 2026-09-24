@@ -128,7 +128,7 @@ y_ = -15:1:15; % Coordonnées en y
 
 [X, Y] = meshgrid(x_, y_); % Création de la grille
 U =   Y ; %+ 3*(0.0-X); % Composante x du vecteur, can put a K
-V =  -sys_ball.gamma - sign(Y) .* sys_ball.f_air.*Y.^2;  % Composante y du vecteur
+V =  -sys_ball.g - sign(Y) .* sys_ball.f_air.*Y.^2;  % Composante y du vecteur
 
 % Tracé du champ de vecteurs
 quiver(X, Y, U, V);

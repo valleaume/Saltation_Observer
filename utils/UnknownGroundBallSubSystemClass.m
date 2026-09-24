@@ -23,7 +23,7 @@ classdef UnknownGroundBallSubSystemClass < HybridSubsystem
     properties
         lambda = 0.5;   % restitution coefficient (called e in the notes)
         mu     = 2.0;   % velocity added at each impact (mu > 0 removes Zeno)
-        gamma  = 9.8;   % gravity
+        g      = 9.8;   % gravity
         f_air  = 0.0;   % quadratic air friction
     end
 
@@ -37,7 +37,7 @@ classdef UnknownGroundBallSubSystemClass < HybridSubsystem
 
         function xdot = flowMap(this, x, ~, ~, ~)
             xdot = [ x(2);
-                    -this.gamma - sign(x(2))*this.f_air*x(2)^2;
+                    -this.g - sign(x(2))*this.f_air*x(2)^2;
                      0 ];
         end
 
@@ -68,7 +68,7 @@ classdef UnknownGroundBallSubSystemClass < HybridSubsystem
         end
         function taustar = tauStar(this)
             % Asymptotic flight time between impacts (frictionless case only).
-            taustar = 2*this.vStar()/this.gamma;
+            taustar = 2*this.vStar()/this.g;
         end
     end
 end

@@ -3,7 +3,7 @@ classdef ObserverBouncingBallSystemClass < HybridSystem
 
     % Define variable properties that can be modified.
     properties
-        gamma = 9.8;  % Acceleration due to gravity.
+        g = 9.8;      % Acceleration due to gravity.
         lambda = 0.8; % Coefficient of restitution.
         mu = 2;       % Coefficient of additive velocity.
         f_air = 0.01; % Coefficient of air friction.
@@ -51,7 +51,7 @@ classdef ObserverBouncingBallSystemClass < HybridSystem
             h_obs = x(this.height_index_obs);
             v_obs = x(this.velocity_index_obs);
             % Define the value of the flow map f(x). 
-            xdot = [v; -this.gamma - sign(v) * this.f_air*v^2; v_obs + this.Lc_1*(h - h_obs); -this.gamma - sign(v_obs) * this.f_air*v_obs^2 + this.Lc_2*(h - h_obs)];
+            xdot = [v; -this.g - sign(v) * this.f_air*v^2; v_obs + this.Lc_1*(h - h_obs); -this.g - sign(v_obs) * this.f_air*v_obs^2 + this.Lc_2*(h - h_obs)];
         end
         function xplus = jumpMap(this, x, t, j)
             % Extract the state components.

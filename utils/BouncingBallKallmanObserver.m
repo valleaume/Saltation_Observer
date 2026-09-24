@@ -3,7 +3,7 @@ classdef BouncingBallKallmanObserver < HybridSubsystem
 
     % Define variable properties that can be modified.
     properties
-        gamma = 9.8;        % Acceleration due to gravity.
+        g = 9.8;            % Acceleration due to gravity.
         lambda = 0.8;       % Coefficient of restitution.
         mu = 2;             % Coefficient of additive velocity.
         f_air = 0.0;        % Coefficient of air friction.
@@ -50,7 +50,7 @@ classdef BouncingBallKallmanObserver < HybridSubsystem
             h = x(this.height_index);
             % define P
             P = reshape(x(this.P_index_start:this.P_index_end), [2,2]);
-            f = [v; -this.gamma - sign(v) * this.f_air*v^2];
+            f = [v; -this.g - sign(v) * this.f_air*v^2];
 
             % define matrices
             F = [0, 1; 0, -2*sign(v)*v*this.f_air];
@@ -71,7 +71,7 @@ classdef BouncingBallKallmanObserver < HybridSubsystem
             v = x(this.velocity_index);
 
             P = reshape(x(this.P_index_start:this.P_index_end), [2,2]);
-            f = [v; -this.gamma - sign(v) * this.f_air*v^2];
+            f = [v; -this.g - sign(v) * this.f_air*v^2];
 
             % define matrices
             %F = [0, 1; 0, -2*sign(v)*v*this.f_air]
@@ -79,7 +79,7 @@ classdef BouncingBallKallmanObserver < HybridSubsystem
             R_d = this.gain*eye(1);
 
             v_plus = -this.lambda*v;
-            f_plus = [v_plus; -this.gamma - sign(v_plus) * this.f_air*v_plus^2];
+            f_plus = [v_plus; -this.g - sign(v_plus) * this.f_air*v_plus^2];
             w = [1; 0];
             J = [1, 0; 0, -this.lambda];
             % saltation matrix

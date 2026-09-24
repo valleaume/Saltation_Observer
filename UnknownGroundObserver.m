@@ -22,8 +22,8 @@ close all;
 sys_ball = UnknownGroundBallSubSystemClass();
 sys_ball.lambda = 0.5;     % restitution
 sys_ball.mu     = 2.0;     % added velocity at impact (mu > 0 => no Zeno)
-sys_ball.gamma  = 9.8;
-sys_ball.f_air  = 0;
+sys_ball.g     = 9.8;
+sys_ball.f_air = 0;
 
 vstar   = sys_ball.vStar();      % = 4
 taustar = sys_ball.tauStar();    % = 0.8163
@@ -33,7 +33,7 @@ fprintf('asymptotic operating point: v* = %.4f, tau* = %.4f\n', vstar, taustar);
 sys_obs = UnknownGroundBallObserver();
 sys_obs.lambda = sys_ball.lambda;
 sys_obs.mu     = sys_ball.mu;
-sys_obs.gamma  = sys_ball.gamma;
+sys_obs.g      = sys_ball.g;
 sys_obs.f_air  = sys_ball.f_air;
 
 % Gains from the k=1 JSR LMI search (see JSR_LMI_search.m):
@@ -63,8 +63,8 @@ config = HybridSolverConfig('AbsTol', 1e-8, 'RelTol', 1e-10, 'MaxStep', 1e-3);
 
 % Start ON the period-1 orbit so that (v,tau) sits at (v*,tau*):
 % dropping from rest at height v*^2/(2g) above the ground gives impact speed v*.
-x3_true = 0.0;
-h0      = vstar^2/(2*sys_ball.gamma);
+x3_true = 0.01;
+h0      = vstar^2/(2*sys_ball.g);
 x0      = [x3_true + h0; 0; x3_true];
 
 % Small initial error (Theorem 1 is local).  Note the third component: the
@@ -100,7 +100,7 @@ hpb = HybridPlotBuilder().subplots('on') ...
     .plotFlows(sol('Ball'));
 grid on; hold on
 hpb.subplots('on') ...
-    .flowColor('#FF8800').jumpColor('m').jumpEndMarker('o') ...
+    .flowColor('#FF8800').jumpColor('m').flowLineStyle('--').jumpEndMarker('o') ...
     .legend('$\hat{x}_1$','$\hat{x}_2$','$\hat{x}_3$') ...
     .plotFlows(sol('Observer').select(1:3));
 
