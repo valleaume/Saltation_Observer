@@ -36,10 +36,27 @@ sys_obs.mu     = sys_ball.mu;
 sys_obs.g      = sys_ball.g;
 sys_obs.f_air  = sys_ball.f_air;
 
-% Gains from the k=1 JSR LMI search (see JSR_LMI_search.m):
-%   omega = 7 rad/s, zeta = 0.25  ->  flow poles -1.75 +/- 6.78i
-sys_obs.L_c   = [11.6; 31.8; 0.0];
-sys_obs.L_d   = [3.7; 1.1; -1.2];
+%% Select observer gain profile
+% Set to 'working' for the stabilizing gains or 'nonworking' for the
+% degenerate jump gain that leaves the ground-height error invariant.
+if ~exist('gainProfile', 'var') || isempty(gainProfile)
+    gainProfile = 'working';
+end
+
+switch gainProfile
+    case 'working'
+        % k=1 JSR LMI gains: omega = 7 rad/s, zeta = 0.25.
+        sys_obs.L_c   = [11.6; 31.8; 0.0];
+        sys_obs.L_d   = [3.7; 1.1; -1.2];
+        gamma2 = 0.2838;
+    case 'nonworking'
+        % L_d(3)=0 gives M_before(3,3)=1, so ground-height error persists.
+        sys_obs.L_c   = [11.6; 31.8; 0.0];
+        sys_obs.L_d   = [3.7; 1.1; 0.0];
+        gamma2 = NaN;
+    otherwise
+        error('Unknown gain profile "%s". Choose "working" or "nonworking".', gainProfile);
+end
 sys_obs.kappa = 0;          % Lemma 2 design (omega_hat independent of y)
 
 % BEWARE: L_d(3) = 0 is a degenerate point -- M_before(3,3) = 1 identically,
@@ -50,8 +67,8 @@ sys_obs.kappa = 0;          % Lemma 2 design (omega_hat independent of y)
 P = [   2.3   -0.32 -19.0110
    -0.32    1.08    4.72
    -19.0110    4.72   326];
-gamma2 = 0.2838;            % per-cycle contraction certified on +/-5%
 fprintf('certificate on P: max eig(P)= %.4f,  min eig(P) = %.4f\n', max(eig(P)), min(eig(P)));
+fprintf('gain profile: %s\n', gainProfile);
 
 %% Coupled system
 sys = CompositeHybridSystem('Ball', sys_ball, 'Observer', sys_obs);
@@ -129,18 +146,27 @@ for k = 1:numel(jump_idx)
 end
 figure(3)
 semilogy(t_at_jumps, V_at_jumps, 'o-'); hold on; grid on;
-semilogy(t_at_jumps, V_at_jumps(1)*gamma2.^(0:numel(V_at_jumps)-1)', 'r--');
+if ~isnan(gamma2)
+    semilogy(t_at_jumps, V_at_jumps(1)*gamma2.^(0:numel(V_at_jumps)-1)', 'r--');
+end
 xlabel('$t$','Interpreter','latex');
 ylabel('$\theta^\top P\,\theta$','Interpreter','latex');
-legend('measured at system jumps', ...
-       sprintf('certified rate $\\gamma^2 = %.3f$', gamma2), ...
-       'Interpreter','latex','Location','best',...
-       'Box', 'off');
-title('Per-cycle contraction');
+if ~isnan(gamma2)
+    legend('measured at system jumps', ...
+           sprintf('certified rate $\\gamma^2 = %.3f$', gamma2), ...
+           'Interpreter','latex','Location','best',...
+           'Box', 'off');
+    title('Per-cycle contraction');
+else
+    legend('measured at system jumps', 'Interpreter','latex','Location','best', 'Box', 'off');
+    title('Ground-height error with nonworking gains');
+end
 
 fprintf('\nobserved per-cycle ratios:\n');
 disp((V_at_jumps(2:end)./V_at_jumps(1:end-1))');
-fprintf('certified bound: %.4f\n', gamma2);
+if ~isnan(gamma2)
+    fprintf('certified bound: %.4f\n', gamma2);
+end
 
 %% Figure 4 : who jumps first
 figure(4)
@@ -170,7 +196,7 @@ figure(5)
 e = sol('Ball').x - sol('Observer').x(:,1:3);
 
 % Trying to get rid of spikes
-% Arbitrary treshold on velocity error to get rid of them
+% Remove time when observer and system are not synchronized
 far_jump_mask = ((sol('Ball').j == sol('Observer').j))';
 e_after = e(sign_jump==1 & far_jump_mask,:);
 e_before = e(sign_jump==-1 & far_jump_mask,:); 

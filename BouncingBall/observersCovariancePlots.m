@@ -22,7 +22,7 @@ data_to_load = 'raw-bouncing-ball-after-before-05-Mar-2026.mat';  % Data file to
 
 % ====== LOAD DATA ======
 fprintf('Loading data from: data/%s\n', data_to_load);
-dataset = load("data/"+data_to_load);
+dataset = load("../data/"+data_to_load);
 data_x = dataset.data_x;
 data_v = dataset.data_v;
 data_x_ref = dataset.data_x_ref;
