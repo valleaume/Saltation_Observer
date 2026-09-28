@@ -148,6 +148,46 @@ stairs(sol('Ball').t, sol('Ball').j - sol('Observer').j); grid on;
 xlabel('$t$','Interpreter','latex'); ylabel('$j - \hat{j}$','Interpreter','latex');
 title('Jump-index mismatch (branch selector)');
 
+%% Figure 5 : Norm of the error
+% Preprocess : detect if observer jumps before or after the system
+mask_jump_after = (sol('Ball').j - sol("Observer").j) > 0;
+mask_jump_before = (sol('Ball').j - sol("Observer").j) < 0;
+
+sign_jump = zeros(1,length(mask_jump_after));
+for i=2:length(mask_jump_after)
+    if mask_jump_before(i)
+        sign_jump(i) = -1;
+    else
+        if mask_jump_after(i)
+            sign_jump(i) = +1;
+        else
+            sign_jump(i) = sign_jump(i-1);
+        end
+    end
+end
+
+figure(5)
+e = sol('Ball').x - sol('Observer').x(:,1:3);
+
+% Trying to get rid of spikes
+% Arbitrary treshold on velocity error to get rid of them
+
+far_jump_mask = ((sol('Ball').j == sol('Observer').j))';
+e_after = e(sign_jump==1 & far_jump_mask,:);
+e_before = e(sign_jump==-1 & far_jump_mask,:); 
+e_start = e(sign_jump==0 & far_jump_mask,:); 
+
+semilogy(sol('Ball').t(sign_jump==-1 & far_jump_mask), diag(e_before*P*e_before'), color='green'); % When jumping before
+hold on;
+semilogy(sol('Ball').t(sign_jump==1 & far_jump_mask), diag(e_after*P*e_after'), color='red', LineStyle='--'); % When jumping after
+hold on;
+semilogy(sol('Ball').t(sign_jump==0 & far_jump_mask), diag(e_start*P*e_start'), color='black'); % When starting
+grid on;
+legend('Observer jumps before', 'Observer jumps after');
+xlabel('$t$', 'Interpreter', 'Latex')
+ylabel('$\theta^\top P\,\theta$','Interpreter','latex');
+title("Norm error");
+
 %% Verification of the certificate at (v*,tau*)
 [Mb, Ma] = sys_obs.saltationMatrices(vstar);
 E = expm(sys_obs.flowJacobian()*taustar);
