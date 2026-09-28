@@ -69,12 +69,13 @@ x0      = [x3_true + h0; 0; x3_true];
 
 % Small initial error (Theorem 1 is local).  Note the third component: the
 % observer does NOT know the ground height.
-theta0  = [0.5; -0.6; -0.62];  theta0 = theta0/norm(theta0);
-eps0    = 1e-1;
+theta0  = [0.5; -0.6; -0.62];  
+theta0 = theta0/norm(theta0);
+eps0    = 5e-1;
 xhat0   = x0 + eps0*theta0;
 
 x0_cell = {x0; xhat0};
-tspan   = [0, 8];
+tspan   = [0, 4];
 jspan   = [0, 200];
 
 %% Solve
@@ -100,7 +101,7 @@ hpb = HybridPlotBuilder().subplots('on') ...
     .plotFlows(sol('Ball'));
 grid on; hold on
 hpb.subplots('on') ...
-    .flowColor('#FF8800').jumpColor('m').flowLineStyle('--').jumpEndMarker('o') ...
+    .flowColor('#FF8800').jumpColor('m').flowLineStyle('--').jumpLineStyle(':').jumpEndMarker('o') ...
     .legend('$\hat{x}_1$','$\hat{x}_2$','$\hat{x}_3$') ...
     .plotFlows(sol('Observer').select(1:3));
 
