@@ -38,8 +38,8 @@ sys_obs.f_air  = sys_ball.f_air;
 
 % Gains from the k=1 JSR LMI search (see JSR_LMI_search.m):
 %   omega = 7 rad/s, zeta = 0.25  ->  flow poles -1.75 +/- 6.78i
-sys_obs.L_c   = [2.25; 56.25; 0.0];
-sys_obs.L_d   = [1.4618; -1.6816; 0.9912];
+sys_obs.L_c   = [11.6; 31.8; 0.0];
+sys_obs.L_d   = [3.7; 1.1; -1.2];
 sys_obs.kappa = 0;          % Lemma 2 design (omega_hat independent of y)
 
 % BEWARE: L_d(3) = 0 is a degenerate point -- M_before(3,3) = 1 identically,
@@ -47,9 +47,9 @@ sys_obs.kappa = 0;          % Lemma 2 design (omega_hat independent of y)
 % Any gain search must be kept away from L_d(3) = 0.
 
 %% Certificate P for the Lyapunov plot (from the same LMI search)
-P = [   2.6178   -0.1040   -4.0110
-   -0.1040    0.0419    0.2283
-   -4.0110    0.2283    6.6431 ];
+P = [   2.3   -0.32 -19.0110
+   -0.32    1.08    4.72
+   -19.0110    4.72   326];
 gamma2 = 0.2838;            % per-cycle contraction certified on +/-5%
 fprintf('certificate on P: max eig(P)= %.4f,  min eig(P) = %.4f\n', max(eig(P)), min(eig(P)));
 
@@ -63,19 +63,19 @@ config = HybridSolverConfig('AbsTol', 1e-8, 'RelTol', 1e-10, 'MaxStep', 1e-3);
 
 % Start ON the period-1 orbit so that (v,tau) sits at (v*,tau*):
 % dropping from rest at height v*^2/(2g) above the ground gives impact speed v*.
-x3_true = 0.01;
+x3_true = 0.0;
 h0      = vstar^2/(2*sys_ball.g);
-x0      = [x3_true + h0; 0; x3_true];
+x0      = [x3_true; vstar; x3_true];  % drop from rest at height h0 above the ground
 
 % Small initial error (Theorem 1 is local).  Note the third component: the
 % observer does NOT know the ground height.
-theta0  = [0.5; -0.6; -0.62];  
+theta0  = [0.83; -0.5; 0.06];  
 theta0 = theta0/norm(theta0);
-eps0    = 5e-1;
+eps0    = 1e-3;
 xhat0   = x0 + eps0*theta0;
 
 x0_cell = {x0; xhat0};
-tspan   = [0, 4];
+tspan   = [0, 20];
 jspan   = [0, 200];
 
 %% Solve
