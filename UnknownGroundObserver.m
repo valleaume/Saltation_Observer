@@ -171,7 +171,6 @@ e = sol('Ball').x - sol('Observer').x(:,1:3);
 
 % Trying to get rid of spikes
 % Arbitrary treshold on velocity error to get rid of them
-
 far_jump_mask = ((sol('Ball').j == sol('Observer').j))';
 e_after = e(sign_jump==1 & far_jump_mask,:);
 e_before = e(sign_jump==-1 & far_jump_mask,:); 
