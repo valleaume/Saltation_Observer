@@ -28,7 +28,6 @@ for profile_index = 1:numel(gain_profiles)
 
     myPrintPDF(figure(1), fullfile(figures_folder, ['unknown_ground_states_' gainProfile]));
     myPrintPDF(figure(2), fullfile(figures_folder, ['unknown_ground_height_estimate_' gainProfile]));
-    myPrintPDF(figure(3), fullfile(figures_folder, ['unknown_ground_discrete_lyapunov_' gainProfile]));
     myPrintPDF(figure(5), fullfile(figures_folder, ['unknown_ground_continuous_lyapunov_' gainProfile]));
 end
 

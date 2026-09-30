@@ -157,47 +157,6 @@ ylabel('$x_3$','Interpreter','latex');
 legend('true ground height','estimate','Location','best', 'Location', 'northeast', 'Interpreter', 'latex', 'Box', 'off');
 title('Ground height is corrected only at jumps');
 
-%% Figure 3 : Lyapunov function, sampled after paired jumps
-% Skip the mismatch window and sample once both subsystems reach the same j.
-e_all = ball_sol.x - observer_sol.x(:,1:3);
-jump_idx = find(diff(ball_sol.j) > 0);
-V_at_jumps = zeros(numel(jump_idx),1);
-t_at_jumps = zeros(numel(jump_idx),1);
-for k = 1:numel(jump_idx)
-    post_ball_idx = jump_idx(k) + 1;
-    target_j = ball_sol.j(post_ball_idx);
-    paired_offset = find(synchronized_mask(post_ball_idx:end) & ...
-                         ball_sol.j(post_ball_idx:end) == target_j, 1, 'first');
-    assert(~isempty(paired_offset), ...
-        'No synchronized sample found after system jump j = %d.', target_j);
-    paired_idx = post_ball_idx + paired_offset - 1;
-    ek = e_all(paired_idx,:)';
-    V_at_jumps(k) = ek'*P*ek;
-    t_at_jumps(k) = ball_sol.t(paired_idx);
-end
-figure(3)
-semilogy(t_at_jumps, V_at_jumps, 'o-'); hold on; grid on;
-if ~isnan(gamma2)
-    semilogy(t_at_jumps, V_at_jumps(1)*gamma2.^(0:numel(V_at_jumps)-1)', 'r--');
-end
-xlabel('$t$','Interpreter','latex');
-ylabel('$\theta^\top P\,\theta$','Interpreter','latex');
-if ~isnan(gamma2)
-    legend('measured after paired jumps', ...
-           sprintf('certified rate $\\gamma^2 = %.3f$', gamma2), ...
-           'Interpreter','latex','Location','best',...
-           'Box', 'off');
-else
-    legend('measured after paired jumps', 'Interpreter','latex','Location','best', 'Box', 'off');
-end
-title('Per-cycle contraction');
-
-fprintf('\nobserved per-cycle ratios:\n');
-disp((V_at_jumps(2:end)./V_at_jumps(1:end-1))');
-if ~isnan(gamma2)
-    fprintf('certified bound: %.4f\n', gamma2);
-end
-
 %% Figure 4 : who jumps first
 figure(4)
 stairs(sol('Ball').t, sol('Ball').j - sol('Observer').j); grid on;
@@ -240,3 +199,46 @@ a_d = max([max(real(eig(Mb'*P*Mb, P))), max(real(eig(Ma'*P*Ma, P)))]);
 fprintf('\n--- Corollary 1 with the same P (expected to FAIL) ---\n');
 fprintf('a_c = %.4f,  a_d = %.4f,  ln(a_d) + a_c*tau* = %.4f\n', ...
         a_c, a_d, log(a_d) + a_c*taustar);
+
+%{
+%% Figure 3 : Lyapunov function, sampled after paired jumps
+% Skip the mismatch window and sample once both subsystems reach the same j.
+e_all = ball_sol.x - observer_sol.x(:,1:3);
+jump_idx = find(diff(ball_sol.j) > 0);
+V_at_jumps = zeros(numel(jump_idx),1);
+t_at_jumps = zeros(numel(jump_idx),1);
+for k = 1:numel(jump_idx)
+    post_ball_idx = jump_idx(k) + 1;
+    target_j = ball_sol.j(post_ball_idx);
+    paired_offset = find(synchronized_mask(post_ball_idx:end) & ...
+                         ball_sol.j(post_ball_idx:end) == target_j, 1, 'first');
+    assert(~isempty(paired_offset), ...
+        'No synchronized sample found after system jump j = %d.', target_j);
+    paired_idx = post_ball_idx + paired_offset - 1;
+    ek = e_all(paired_idx,:)';
+    V_at_jumps(k) = ek'*P*ek;
+    t_at_jumps(k) = ball_sol.t(paired_idx);
+end
+figure(3)
+semilogy(t_at_jumps, V_at_jumps, 'o-'); hold on; grid on;
+if ~isnan(gamma2)
+    semilogy(t_at_jumps, V_at_jumps(1)*gamma2.^(0:numel(V_at_jumps)-1)', 'r--');
+end
+xlabel('$t$','Interpreter','latex');
+ylabel('$\theta^\top P\,\theta$','Interpreter','latex');
+if ~isnan(gamma2)
+    legend('measured after paired jumps', ...
+           sprintf('certified rate $\\gamma^2 = %.3f$', gamma2), ...
+           'Interpreter','latex','Location','best',...
+           'Box', 'off');
+else
+    legend('measured after paired jumps', 'Interpreter','latex','Location','best', 'Box', 'off');
+end
+title('Per-cycle contraction');
+
+fprintf('\nobserved per-cycle ratios:\n');
+disp((V_at_jumps(2:end)./V_at_jumps(1:end-1))');
+if ~isnan(gamma2)
+    fprintf('certified bound: %.4f\n', gamma2);
+end
+%}
