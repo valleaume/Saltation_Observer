@@ -119,13 +119,19 @@ sol = sys.solve(x0_cell, tspan, jspan, config);
 sol
 
 %% Who jumps first
-mask_after  = (sol('Ball').j - sol('Observer').j) > 0;
-mask_before = (sol('Ball').j - sol('Observer').j) < 0;
-sign_jump = zeros(1, length(mask_after));
-for i = 2:length(mask_after)
-    if mask_before(i),     sign_jump(i) = -1;
-    elseif mask_after(i),  sign_jump(i) = +1;
-    else,                  sign_jump(i) = sign_jump(i-1);
+ball_sol = sol('Ball');
+observer_sol = sol('Observer');
+mask_jump_after = (ball_sol.j - observer_sol.j) > 0;
+mask_jump_before = (ball_sol.j - observer_sol.j) < 0;
+synchronized_mask = (ball_sol.j == observer_sol.j);
+sign_jump = zeros(1, length(mask_jump_after));
+for i = 2:length(mask_jump_after)
+    if mask_jump_before(i),
+        sign_jump(i) = -1;
+    elseif mask_jump_after(i),
+        sign_jump(i) = +1;
+    else,                  
+        sign_jump(i) = sign_jump(i-1);
     end
 end
 
@@ -151,17 +157,23 @@ ylabel('$x_3$','Interpreter','latex');
 legend('true ground height','estimate','Location','best', 'Location', 'northeast', 'Interpreter', 'latex', 'Box', 'off');
 title('Ground height is corrected only at jumps');
 
-%% Figure 3 : Lyapunov function, sampled at the SYSTEM jump times
-% The certificate bounds V from one system jump to the next; V is NOT
-% controlled inside the mismatch window, hence the sampling.
-e_all = sol('Ball').x - sol('Observer').x(:,1:3);
-jump_idx = find(diff(sol('Ball').j) > 0);
+%% Figure 3 : Lyapunov function, sampled after paired jumps
+% Skip the mismatch window and sample once both subsystems reach the same j.
+e_all = ball_sol.x - observer_sol.x(:,1:3);
+jump_idx = find(diff(ball_sol.j) > 0);
 V_at_jumps = zeros(numel(jump_idx),1);
 t_at_jumps = zeros(numel(jump_idx),1);
 for k = 1:numel(jump_idx)
-    ek = e_all(jump_idx(k)+1,:)';
+    post_ball_idx = jump_idx(k) + 1;
+    target_j = ball_sol.j(post_ball_idx);
+    paired_offset = find(synchronized_mask(post_ball_idx:end) & ...
+                         ball_sol.j(post_ball_idx:end) == target_j, 1, 'first');
+    assert(~isempty(paired_offset), ...
+        'No synchronized sample found after system jump j = %d.', target_j);
+    paired_idx = post_ball_idx + paired_offset - 1;
+    ek = e_all(paired_idx,:)';
     V_at_jumps(k) = ek'*P*ek;
-    t_at_jumps(k) = sol('Ball').t(jump_idx(k)+1);
+    t_at_jumps(k) = ball_sol.t(paired_idx);
 end
 figure(3)
 semilogy(t_at_jumps, V_at_jumps, 'o-'); hold on; grid on;
@@ -171,12 +183,12 @@ end
 xlabel('$t$','Interpreter','latex');
 ylabel('$\theta^\top P\,\theta$','Interpreter','latex');
 if ~isnan(gamma2)
-    legend('measured at system jumps', ...
+    legend('measured after paired jumps', ...
            sprintf('certified rate $\\gamma^2 = %.3f$', gamma2), ...
            'Interpreter','latex','Location','best',...
            'Box', 'off');
 else
-    legend('measured at system jumps', 'Interpreter','latex','Location','best', 'Box', 'off');
+    legend('measured after paired jumps', 'Interpreter','latex','Location','best', 'Box', 'off');
 end
 title('Per-cycle contraction');
 
@@ -193,29 +205,12 @@ xlabel('$t$','Interpreter','latex'); ylabel('$j - \hat{j}$','Interpreter','latex
 title('Jump-index mismatch (branch selector)');
 
 %% Figure 5 : Norm of the error
-% Preprocess : detect if observer jumps before or after the system
-mask_jump_after = (sol('Ball').j - sol("Observer").j) > 0;
-mask_jump_before = (sol('Ball').j - sol("Observer").j) < 0;
-
-sign_jump = zeros(1,length(mask_jump_after));
-for i=2:length(mask_jump_after)
-    if mask_jump_before(i)
-        sign_jump(i) = -1;
-    else
-        if mask_jump_after(i)
-            sign_jump(i) = +1;
-        else
-            sign_jump(i) = sign_jump(i-1);
-        end
-    end
-end
-
 figure(5)
 e = sol('Ball').x - sol('Observer').x(:,1:3);
 
 % Trying to get rid of spikes
 % Remove time when observer and system are not synchronized
-far_jump_mask = ((sol('Ball').j == sol('Observer').j))';
+far_jump_mask = synchronized_mask';
 e_after = e(sign_jump==1 & far_jump_mask,:);
 e_before = e(sign_jump==-1 & far_jump_mask,:); 
 e_start = e(sign_jump==0 & far_jump_mask,:); 
