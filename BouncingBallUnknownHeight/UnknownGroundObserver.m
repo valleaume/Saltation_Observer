@@ -61,7 +61,7 @@ switch gainProfile
         eps0    = 5e-1;
 
         x0      = [x3_true + h0; 0; x3_true];
-        tspan   = [0, 4];
+        tspan   = [0, 14];
     case 'BeforeContracting'
         % L_d(3)=0 gives M_before(3,3)=1, so ground-height error persists.
         sys_obs.L_c   = [11.6; 31.8; 0.0];
@@ -75,7 +75,7 @@ switch gainProfile
         eps0    = 1e-3;
 
         x0      = [x3_true; vstar; x3_true];
-        tspan   = [0, 17];
+        tspan   = [0, 14];
     otherwise
         error('Unknown gain profile "%s". Choose "AfterBeforeContracting" or "BeforeContracting".', gainProfile);
 end
@@ -226,7 +226,7 @@ semilogy(sol('Ball').t(sign_jump==1 & far_jump_mask), diag(e_after*P*e_after'), 
 hold on;
 semilogy(sol('Ball').t(sign_jump==0 & far_jump_mask), diag(e_start*P*e_start'), color='black'); % When starting
 grid on;
-legend('Observer jumps before', 'Observer jumps after');
+legend('Observer jumps before', 'Observer jumps after', 'Box', 'off', 'Location', 'best');
 xlabel('$t$', 'Interpreter', 'Latex')
 ylabel('$\theta^\top P\,\theta$','Interpreter','latex');
 title("Norm error");
