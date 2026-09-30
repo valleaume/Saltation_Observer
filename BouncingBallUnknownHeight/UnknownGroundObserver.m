@@ -48,19 +48,19 @@ h0      = vstar^2/(2*sys_ball.g);
 
 switch gainProfile
     case 'AfterBeforeContracting'
-        % k=1 JSR LMI gains: omega = 7 rad/s, zeta = 0.25.
-        sys_obs.L_c   = [2.25; 56.25; 0.0];
-        sys_obs.L_d   = [1.4618; -1.6816; 0.9912];
+        
+        sys_obs.L_c   = [2.79; 40.48; 0];
+        sys_obs.L_d   = [-1.37; 0.41; 0.28];
 
-        gamma2 = 0.2838;
-        P = [   2.6178   -0.1040   -4.0110
-        -0.1040    0.0419    0.2283
-        -4.0110    0.2283    6.6431 ];
+        gamma2 = 0.609;
+        P = [   19.333   13.331     4.491
+       13.331   25.106    88.745
+        4.491   88.745   509.083];
 
-        theta0  = [0.5; -0.6; -0.62];  
-        eps0    = 5e-1;
+        theta0  = [-0.526; 0.848; -0.056];  
+        eps0    = 5e-2;
 
-        x0      = [x3_true + h0; 0; x3_true];
+        x0      = [x3_true ; vstar; x3_true];
         tspan   = [0, 14];
     case 'BeforeContracting'
         % L_d(3)=0 gives M_before(3,3)=1, so ground-height error persists.
