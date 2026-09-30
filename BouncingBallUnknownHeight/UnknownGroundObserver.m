@@ -57,11 +57,11 @@ switch gainProfile
        13.331   25.106    88.745
         4.491   88.745   509.083];
 
-        theta0  = [-0.526; 0.848; -0.056];  
-        eps0    = 5e-2;
+        theta0  = [-0.526; 0.848; -0.56];  
+        eps0    = 5e-1;
 
         x0      = [x3_true ; vstar; x3_true];
-        tspan   = [0, 14];
+        tspan   = [0, 9];
     case 'BeforeContracting'
         % L_d(3)=0 gives M_before(3,3)=1, so ground-height error persists.
         sys_obs.L_c   = [11.6; 31.8; 0.0];
