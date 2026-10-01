@@ -3,22 +3,24 @@
 % This script generates random initial conditions and propagates them through
 % the coupled ball-observer-Kalman system, collecting data for analysis.
 %
-% Data is saved as a timestamped .mat file in the data/ folder.
-% To skip regeneration and load existing data, set GENERATE_POINTS = false
-% and specify the data_to_load filename.
+% Data is saved as a timestamped .mat file in the data/ folder; its name is
+% left in data_to_load for observersCovariancePlots.m.
+%
+% The settings below can be overridden by defining the variable before
+% running the script (used by the pipeline and the tests).
 
-addpath('utils');
+project_folder = setupPaths();
 
 % ====== USER CONFIGURATION ======
-GENERATE_POINTS = true;              % Set to true to generate new data
-data_to_load = 'raw-bouncing-ball-after-before-05-Mar-2026.mat';  % File to load if not generating
-n_points = 1000;                      % Number of random initial conditions to generate
+if ~exist('GENERATE_POINTS', 'var'), GENERATE_POINTS = true; end   % Set to true to generate new data
+if ~exist('n_points', 'var'),        n_points = 1000;        end   % Number of random initial conditions
+if ~exist('data_folder', 'var'),     data_folder = fullfile(project_folder, 'data'); end
 
 
 % ====== LOAD SYSTEM CONFIGURATION ======
 nameString = 'raw-bouncing-ball-after-before-';
 [sys, config, sys_ball, sys_obs, sys_obs_ref] = observersCovarianceConfig();
-saveConfigToFile(sys_ball, sys_obs, sys_obs_ref, config, nameString);
+saveConfigToFile(sys_ball, sys_obs, sys_obs_ref, config, nameString, fullfile(data_folder, 'config'));
 
 % ====== DISTRIBUTION OF INITIAL CONDITIONS ======
 mu = [1; 2];                    % Mean vector (expectation)
@@ -113,8 +115,9 @@ if GENERATE_POINTS
     
     % Save dataset with timestamped filename
     today = string(datetime("today"));
-    datas_filename = strcat('data/',nameString, today);
-    fprintf('Saving data to: %s.mat\n', datas_filename);
+    data_to_load = char(strcat(nameString, today, '.mat'));
+    datas_filename = fullfile(data_folder, data_to_load);
+    fprintf('Saving data to: %s\n', datas_filename);
     save(datas_filename, "data_x", "data_v", "data_t", "data_v_ref", "data_x_ref", "data_jumps")
     
     fprintf('Data generation complete!\n');

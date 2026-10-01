@@ -1,7 +1,8 @@
-addpath('utils');
+project_folder = setupPaths();
 close all;
 
-figures_folder = fullfile(pwd, 'figures\CDC');
+% Output folder (can be overridden by defining figures_folder beforehand)
+if ~exist('figures_folder', 'var'), figures_folder = fullfile(project_folder, 'figures', 'CDC'); end
 if ~isfolder(figures_folder)
     mkdir(figures_folder);
 end
@@ -230,7 +231,7 @@ legend('$x$', '$\hat{x}$', 'Interpreter', 'Latex')
 xlim([0, 25]);
 
 myPrintPDF(cf, fullfile(figures_folder, 'Norm_error_stable_no_mask'));
-myPrintPDF(cf, fullfile(figures_folder, '../TAC/Norm_error_stable_no_mask'));
+myPrintPDF(cf, fullfile(figures_folder, '..', 'TAC', 'Norm_error_stable_no_mask'));
 
 %% Synchronization error
 

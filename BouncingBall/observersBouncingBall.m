@@ -1,4 +1,4 @@
-addpath('utils');
+setupPaths();
 close all;
 
 % Define the plant subsystem
