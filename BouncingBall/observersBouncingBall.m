@@ -221,14 +221,10 @@ plot(sol('Ball').t, sol('Ball').j - sol("Observer").j);
 
 % BEWARE : only true for no air friction
 F = [0, 1; 0, 0];
-J = [1, 0; 0, -sys_ball.lambda];
-
-H = [1, 0];
-w = [1; 0];
+H = sys_ball.outputJacobian();
 tau = 15.6718 - 13.6045;
 x = [0; -10.0995];
-M_before = J - sys_obs.L_d*H - (J*sys_ball.flowMap(x, 0, 0, 0) - sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) )/x(2)*w';
-M_after = M_before - sys_obs.L_d*H*(sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) - sys_ball.flowMap(x, 0, 0, 0))/x(2)*w';
+[M_before, M_after] = sys_ball.errorSaltationMatrices(x, sys_obs.L_d);
 
 % Print eigenvalues to theoretically verify stability/unstability
 abs(eig(M_before*expm((F-sys_obs.L_c*H)*tau)))

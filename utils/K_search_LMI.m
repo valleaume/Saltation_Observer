@@ -22,21 +22,20 @@ sys_obs.f_air = sys_ball.f_air;
 
 % BEWARE : only true for no air friction
 F = [0, 1; 0, 0];
-J = [1, 0; 0, -sys_ball.lambda];
-
-H = [1, 0];
-w = [1; 0];
 tau = 15.6718 - 13.6045;
 x = [0; -10.0995];
 
+% Saltation matrices are affine in L_d: M_before = Xi - L_d*H, M_after = Xi - L_d*Htil
+[Xi, H, Htil] = sys_ball.saltationFactors(x);
+
 setlmis([])
 P = lmivar(1, [2 1]);
-MC_before = J - (J*sys_ball.flowMap(x, 0, 0, 0) - sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) )/x(2)*w';
+MC_before = Xi;
 MC_after = MC_before;
 PLd = lmivar(2, [2 1]);
 
 MLd_before = -H;
-MLd_after = MLd_before - H*(sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) - sys_ball.flowMap(x, 0, 0, 0))/x(2)*w';
+MLd_after = -Htil;
 
 flow = expm((F - sys_obs.L_c*H)*tau);
 

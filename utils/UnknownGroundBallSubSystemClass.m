@@ -70,5 +70,21 @@ classdef UnknownGroundBallSubSystemClass < HybridSubsystem
             % Asymptotic flight time between impacts (frictionless case only).
             taustar = 2*this.vStar()/this.g;
         end
+
+        % Derivatives used by the saltation analysis (hardcoded).
+        function Dg = jumpJacobian(this, ~)
+            % Jacobian of jumpMap with the convention x1+ = x3 (see NOTE above).
+            Dg = [0, 0, 1; 0, -this.lambda, 0; 0, 0, 1];
+        end
+        function gradGuard = guardGradient(~, ~)
+            % Gradient of the guard omega(x) = x1 - x3.
+            gradGuard = [1, 0, -1];
+        end
+        function S = saltationMatrix(this, x)
+            % Saltation matrix of the plant at a jump point x (on the guard).
+            f_minus = this.flowMap(x);
+            f_plus = this.flowMap(this.jumpMap(x));
+            S = saltationMatrix(this.jumpJacobian(x), this.guardGradient(x), f_minus, f_plus);
+        end
     end
 end
