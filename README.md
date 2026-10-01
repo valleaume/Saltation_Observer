@@ -1,40 +1,78 @@
 # Saltation_Observer
-Work in progress for Hybrid Observer showing the impact of the saltation matrices on a linear observer. We show the importance of the transversality hypothesis alongside the contractivness of two matrices : $M_{\rm before}$ and $M_{\rm after}$. 
+Hybrid observers for systems with **unknown jump times**: how the saltation
+matrices $M_{\rm before}$ and $M_{\rm after}$ drive the estimation error of a
+linear observer when the observer and the plant do not jump at the same
+time. We show the importance of the transversality hypothesis alongside the
+contractiveness of $M_{\rm before}$ and $M_{\rm after}$.
 
-Related paper : [Saltation-Based analysis of estimation error in observers for hybrid systems with unknown jump times](https://ieeexplore.ieee.org/document/11312843)
+Related papers:
+- CDC: [Saltation-Based analysis of estimation error in observers for hybrid systems with unknown jump times](https://ieeexplore.ieee.org/document/11312843) ([HAL](https://hal.parisnanterre.fr/ENSMP_CAS/hal-05273106))
+- Journal version (TAC): covariance analysis and unknown-ground example, figures from `draw_figures_TAC_PDF.m`.
 
 ## Requirements
-Requires MATLAB 2024b or higher, the [Hybrid Equations Toolbox](https://mathworks.com/matlabcentral/fileexchange/41372-hybrid-equations-toolbox) package.
+- MATLAB R2024b or later
+- [Hybrid Equations Toolbox](https://mathworks.com/matlabcentral/fileexchange/41372-hybrid-equations-toolbox)
+- Optional, for the gain searches only: Robust Control Toolbox (`K_search_LMI.m`),
+  [YALMIP](https://yalmip.github.io/) + an SDP solver (`JSR_LMI_search.m`)
 
-## Repository Overview
+## Quick start
+From the repository root in MATLAB:
 
-The repository is organized around hybrid bouncing-ball observer examples and
-the analysis of their flow and jump error dynamics.
+```matlab
+setupPaths            % add the project folders to the path
+runTests('unit')      % ~30 s sanity check
+draw_figures_TAC_PDF  % regenerate the journal figures in figures/TAC
+```
 
-- `observers.m` is the main known-ground observer example.
-- `draw_figures.m` reproduces and exports the figures associated with the conference [paper](https://hal.parisnanterre.fr/ENSMP_CAS/hal-05273106).
-- `observersCovarianceDataGeneration.m`, and
-	`observersCovariancePlots.m` form the modular covariance-analysis workflow.
-	Configuration, data generation, and plotting are kept separate so plots can
-	be regenerated without rerunning the simulations.
-- `print_observer_figures.m` runs selected observer plotting scripts and exports
-	their figures as PDFs.
-- `UnknownGroundObserver.m` is a separate unknown-ground example described
-	below.
-- `utils/` contains the hybrid-system classes, observer implementations,
-	plotting helpers, solver-related utilities, and PDF-export functions used by
-	the scripts.
-- `data/` contains generated `.mat` datasets and saved configuration files.
-- `figures/` contains generated figures, PDFs, and other paper artwork.
-- `Examples/` contains other exploratory or standalone work. These files are
-	useful for experiments and demonstrations, but are not required for the
-	main observer or covariance workflows described here.
+Every script calls `setupPaths` itself, so it can be run from any folder.
 
-The repository also contains search and analysis scripts such as
-`JSR_LMI_search.m`, `K_search_LMI.m`, `K_search_naive.m`, `K_search_YALMIP.m`. They investigate observer gains and contraction or joint
-spectral-radius conditions using different numerical approaches.
+## Entry points
 
-## Unknown-Ground Observer
+| Script | What it does | Output |
+|---|---|---|
+| `draw_figures_CDC_PDF.m` | Known-ground bouncing ball: missed jumps, position/velocity errors, norm of the error, synchronized case | `figures/CDC/*.pdf` (CDC paper) |
+| `draw_figures_TAC_PDF.m` | Runs `observersCovariancePlots` and `UnknownGroundObserver` (both gain profiles) and exports | `figures/TAC/*.pdf` (journal paper) |
+| `BouncingBall/observersBouncingBall.m` | Plant + Kalman observer (salted / not salted), Lyapunov plots, `M_before`/`M_after` eigenvalues | figures |
+| `BouncingBall/observersCovarianceDataGeneration.m` | Monte-Carlo propagation of random initial errors (slow) | `data/*.mat` |
+| `BouncingBall/observersCovariancePlots.m` | Error distributions before/after the first jump, covariance predicted by the saltation matrices | figures |
+| `BouncingBallUnknownHeight/UnknownGroundObserver.m` | Ball above an unknown ground height (see below); set `gainProfile` first | figures |
+| `utils/K_search_LMI.m`, `utils/K_search_naive.m`, `BouncingBallUnknownHeight/JSR_LMI_search.m` | Search for gains making $M_{\rm before}$ and $M_{\rm after}$ contracting (LMI, grid search, joint spectral radius) | console |
+
+The covariance workflow is detailed in [docs/covariance_workflow.md](docs/covariance_workflow.md).
+
+## Repository layout
+
+```
+setupPaths.m, runTests.m      path setup and test runner
+draw_figures_*_PDF.m          paper figures
+BouncingBall/                 known-ground observer and covariance analysis
+BouncingBallUnknownHeight/    unknown-ground observer and JSR gain search
+utils/                        hybrid-system classes, observers, helpers
+tests/                        automatic tests (unit/ and integration/)
+data/                         datasets (.mat) and saved configurations
+docs/                         workflow notes
+Examples/                     exploratory work (billiards, ASLIP, toy systems),
+                              not needed for the papers
+legacy/                       superseded scripts kept for reference
+```
+
+## Notation and where it lives in the code
+
+| Symbol | Meaning | Code |
+|---|---|---|
+| $L_c$ | flow gain of the observer | `BouncingBallObserver.L_c` |
+| $L_d$ | jump gain of the observer | `BouncingBallObserver.L_d` |
+| $K$ | correction of the observer jump set, $\hat x + K(y - h(\hat x))$; $K_1 < 0.5$ is needed for transversality | `BouncingBallObserver.K` |
+| $S$ | saltation matrix of the plant, $S = Dg + (f^+ - Dg\, f^-)\nabla h / (\nabla h\, f^-)$ | `utils/saltationMatrix.m`, `BouncingBallSubSystemClass.saltationMatrix` |
+| $M_{\rm before}$, $M_{\rm after}$ | error saltation matrices when the observer jumps before / after the plant ($K = 0$) | `BouncingBallObserver.saltationMatrices`, `BouncingBallSubSystemClass.errorSaltationMatrices`, `UnknownGroundBallObserver.saltationMatrices` |
+
+The Jacobian of the jump map and the gradient of the guard are written by
+hand in each plant class (`jumpJacobian`, `guardGradient`); flow and jump
+maps are evaluated numerically. The tests check these derivatives against
+finite differences of the simulated hybrid flow. Automatic differentiation
+would remove the hand-written derivatives and is a possible future step.
+
+## Unknown-ground observer
 
 `UnknownGroundObserver.m` studies a bouncing ball whose ground height is
 unknown to the observer. The augmented state is
@@ -50,55 +88,41 @@ the flow gain. Information about the ground height arrives through the impact
 events, which makes this script a useful example of jump-driven estimation
 and of the difference between flow and jump observability.
 
-The script configures an `UnknownGroundBallSubSystem` and an
-`UnknownGroundBallObserver`, simulates their coupled system, and plots the
-resulting states, estimation errors, and a Lyapunov-type contraction measure.
-
-## Reproducing and Exporting Figures
-
-Run the scripts from the repository root in MATLAB. Both scripts add the
-`utils` folder to the MATLAB path and create their output folder if needed.
-
-### `draw_figures.m`
-
-Run:
-
-```matlab
-run('draw_figures.m')
-```
-
-This script simulates the bouncing-ball observer examples and exports the
-figures to `figures/CDC` as PDFs. It generates the phase, position, velocity,
-observer-error, norm-error, and synchronization figures. The system gains,
-initial conditions, time spans, and output folder can be edited at the top of
-the script or in the corresponding plotting sections.
-
-### `draw_paper_figures.m`
-
-This script exports the observer and covariance figures used in the paper.
-Run:
-
-```matlab
-run('draw_paper_figures.m')
-```
-
-It first runs `observersCovariancePlots.m`, which loads the dataset selected by
-`data_to_load` near the top of that script and exports the before/after
-covariance error figures. It then runs `UnknownGroundObserver.m` and exports
-the unknown-ground observer figures. All PDFs are written to `figures/TAC`.
-
-To use another covariance dataset, change `data_to_load` in
-`observersCovariancePlots.m` and make sure the corresponding `.mat` file is in
-the `data/` folder. The covariance data must already have been generated by
-`observersCovarianceDataGeneration.m` or supplied in the repository.
+Two gain profiles are available through the `gainProfile` variable:
+`'AfterBeforeContracting'` (both saltation products contract) and
+`'BeforeContracting'`.
 
 ## Examples of interest for the bouncing ball
 
-Every computations are made with $x_0 = [5, 2]^\top$.
-- Current numerical values $L_c = [0.8, 0.6]^\top, L_d = [0.1, 0.1]^\top, K = [0; 0]^\top$ provide an illustration of local stability of the observer design when all conditions are met. Observer initialized at $\hat{x}_0 = 0.4x_0$.
-- $L_c = [0, 0]^\top, L_d = [1, -0.392]^\top$ provide an example of adequate gains for synchronized jumps ($K = [1; 0]^\top, \hat{x}_0 = (1+6.10^{-1})x_0$) that ceases to work for unknown jump time ($K = [0; 0]^\top, \hat{x}_0 = (1+6.10^{-3})x_0$).  $L_d$ was found using the LMI search adapted to the synchronized case. 
+Every computation is made with $x_0 = [5, 2]^\top$.
+- $L_c = [0.8, 0.6]^\top, L_d = [0.1, 0.1]^\top, K = [0; 0]^\top$ illustrate local stability of the observer design when all conditions are met. Observer initialized at $\hat{x}_0 = 0.4x_0$.
+- $L_c = [0, 0]^\top, L_d = [1, -0.392]^\top$ are adequate gains for synchronized jumps ($K = [1; 0]^\top, \hat{x}_0 = (1+6.10^{-1})x_0$) that cease to work for unknown jump times ($K = [0; 0]^\top, \hat{x}_0 = (1+6.10^{-3})x_0$). $L_d$ was found using the LMI search adapted to the synchronized case.
 - $L_c = [10, 25]^\top, L_d = [0, 0]^\top, K = [3; 0]^\top$ show what happens when transversality of the observer is not met. Observer initialized at $\hat{x}_0 = (1-6.10^{-2})x_0$.
 - $L_c = [0.1, 0.25]^\top, L_d = [0.1, 0.1]^\top, K = [0; 0]^\top$ show what happens when only $M_{\rm before}$ is contracting and not $M_{\rm after}$. Observer initialized at $\hat{x}_0 = (1-6.10^{-4})x_0$.
 
 > [!NOTE]
-> The same gains have been used in the different figures but not necessarily the same starting positions, they have been scaled in order to fit on the same figure. 
+> The same gains have been used in the different figures but not necessarily the same starting positions, they have been scaled in order to fit on the same figure.
+
+## Tests
+
+```matlab
+runTests            % unit + integration (~3 min)
+runTests('unit')    % unit tests only (~30 s)
+runTests('integration')
+runTests('examples')  % also try the Examples/ scripts (slow, may fail)
+```
+
+or from a terminal: `matlab -batch "runTests"` (non-zero exit code on failure).
+
+- `tests/unit/` — plant and observer maps, saltation matrices (closed-form
+  cases, reference values of the papers, finite-difference check),
+  configuration save/load, helpers.
+- `tests/integration/` — run the scripts end to end (bouncing-ball and
+  unknown-ground observers, covariance pipeline on a small dataset, export
+  of the CDC and TAC figures into a temporary folder, gain searches). Their
+  numerical results are compared with the values of the papers
+  (`tests/helpers/goldenValues.m`).
+
+Tests that need a missing toolbox are skipped, not failed. To let a test
+override a script setting, the scripts use
+`if ~exist('name', 'var'), name = default; end` (see `tests/helpers/runScriptIn.m`).
