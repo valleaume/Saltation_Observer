@@ -4,19 +4,19 @@ classdef (TestTags = {'Integration'}) BouncingBallScriptsIT < ProjectTestCase
     methods (Test)
         function observersBouncingBallRuns(tc)
             ws = runScriptIn(fullfile(tc.ProjectFolder, 'BouncingBall', 'observersBouncingBall.m'));
-            G = goldenValues();
-            tc.verifyEqual(ws.M_before, G.obsBB.M_before, 'AbsTol', 1e-12);
-            tc.verifyEqual(ws.M_after, G.obsBB.M_after, 'AbsTol', 1e-12);
+            G = goldenValuesBouncingBallObserver();
+            tc.verifyEqual(ws.M_before, G.M_before, 'AbsTol', 1e-12);
+            tc.verifyEqual(ws.M_after, G.M_after, 'AbsTol', 1e-12);
             tc.verifyGreaterThan(max(ws.sol('Ball').j), 0, 'The ball never bounced.');
         end
 
         function covariancePlotsReproducePaperValues(tc)
             ws = runScriptIn(fullfile(tc.ProjectFolder, 'BouncingBall', 'observersCovariancePlots.m'));
-            G = goldenValues();
-            tc.verifyEqual(ws.M_before, G.plots.M_before, 'AbsTol', 1e-12);
-            tc.verifyEqual(ws.M_after, G.plots.M_after, 'AbsTol', 1e-12);
-            tc.verifyEqual(ws.cov_before, G.plots.cov_before, 'RelTol', 1e-10);
-            tc.verifyEqual(ws.cov_after, G.plots.cov_after, 'RelTol', 1e-10);
+            G = goldenValuesCovariancePlots();
+            tc.verifyEqual(ws.M_before, G.M_before, 'AbsTol', 1e-12);
+            tc.verifyEqual(ws.M_after, G.M_after, 'AbsTol', 1e-12);
+            tc.verifyEqual(ws.cov_before, G.cov_before, 'RelTol', 1e-10);
+            tc.verifyEqual(ws.cov_after, G.cov_after, 'RelTol', 1e-10);
             for k = [2, 5, 6, 7, 8]
                 tc.verifyNotEmpty(findobj('Type', 'figure', 'Number', k), sprintf('Figure %d missing.', k));
             end

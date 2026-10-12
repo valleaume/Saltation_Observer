@@ -9,7 +9,7 @@ classdef (TestTags = {'Integration'}) UnknownGroundObserverIT < ProjectTestCase
         function scriptRunsAndMatchesPaper(tc, gainProfile)
             ws = runScriptIn(fullfile(tc.ProjectFolder, 'BouncingBallUnknownHeight', 'UnknownGroundObserver.m'), ...
                 struct('gainProfile', gainProfile));
-            G = goldenValues();
+            G = goldenValuesUnknownGroundObserver();
             tc.verifyEqual(ws.Mb, G.(gainProfile).Mb, 'AbsTol', 1e-12);
             tc.verifyEqual(ws.Ma, G.(gainProfile).Ma, 'AbsTol', 1e-12);
             for k = [1, 2, 5]

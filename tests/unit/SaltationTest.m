@@ -34,20 +34,20 @@ classdef SaltationTest < ProjectTestCase
 
         % ---- reference values (papers) ----
         function covarianceExampleMatchesReference(tc)
-            G = goldenValues();
+            G = goldenValuesCovariancePlots();
             [~, ~, ~, sys_obs] = observersCovarianceConfig();
             [M_before, M_after] = sys_obs.saltationMatrices([0; -4.85]);
-            tc.verifyEqual(M_before, G.plots.M_before, 'AbsTol', 1e-12);
-            tc.verifyEqual(M_after, G.plots.M_after, 'AbsTol', 1e-12);
+            tc.verifyEqual(M_before, G.M_before, 'AbsTol', 1e-12);
+            tc.verifyEqual(M_after, G.M_after, 'AbsTol', 1e-12);
         end
 
         function knownGroundExampleMatchesReference(tc)
-            G = goldenValues();
+            G = goldenValuesBouncingBallObserver();
             ball = BouncingBallSubSystemClass();
             ball.mu = 0; ball.lambda = 1; ball.f_air = 0;
             [M_before, M_after] = ball.errorSaltationMatrices([0; -10.0995], [0.1; 0.1]);
-            tc.verifyEqual(M_before, G.obsBB.M_before, 'AbsTol', 1e-12);
-            tc.verifyEqual(M_after, G.obsBB.M_after, 'AbsTol', 1e-12);
+            tc.verifyEqual(M_before, G.M_before, 'AbsTol', 1e-12);
+            tc.verifyEqual(M_after, G.M_after, 'AbsTol', 1e-12);
         end
 
         function zeroJumpGainGivesPlantSaltation(tc)
@@ -61,13 +61,16 @@ classdef SaltationTest < ProjectTestCase
 
         function unknownGroundPlantMatchesObserverFactors(tc)
             % UnknownGroundBallObserver.saltationFactors is hand-derived;
-            % its Xi must be the plant saltation matrix.
+            % it must match the generic construction of SaltationModel.
             ball = UnknownGroundBallSubSystemClass();
             obs = UnknownGroundBallObserver();
             obs.lambda = ball.lambda; obs.mu = ball.mu; obs.g = ball.g;
             v = 4;
-            Xi = obs.saltationFactors(v);
-            tc.verifyEqual(ball.saltationMatrix([0; -v; 0]), Xi, 'AbsTol', 1e-12);
+            [Xi, H, Htil] = obs.saltationFactors(v);
+            [Xi_ref, H_ref, Htil_ref] = ball.saltationFactors([0; -v; 0]);
+            tc.verifyEqual(Xi, Xi_ref, 'AbsTol', 1e-12);
+            tc.verifyEqual(H, H_ref, 'AbsTol', 1e-12);
+            tc.verifyEqual(Htil, Htil_ref, 'AbsTol', 1e-12);
         end
 
         % ---- independent check by finite differences on simulations ----
