@@ -1,4 +1,4 @@
-classdef BouncingBallSubSystemClass < HybridSubsystem
+classdef BouncingBallSubSystemClass < HybridSubsystem & SaltationModel
     % A bouncing ball modeled as a HybridSystem subclass.
 
     % Define variable properties that can be modified.
@@ -67,7 +67,15 @@ classdef BouncingBallSubSystemClass < HybridSubsystem
             inD = (h <= 0) && (v <= 0); % We choose h <= 0 insead of h == 0 in order to better detect jumps.
         end
 
-        % Derivatives used by the saltation analysis (hardcoded).
+        % Guard and hand-written derivatives (see SaltationModel).
+        function w = guard(this, x)
+            % Jump when the height reaches zero.
+            w = x(this.height_index);
+        end
+        function A = flowJacobian(this, x)
+            % Jacobian of flowMap.
+            A = BouncingBallSubSystemClass.ballFlowJacobian(x(this.velocity_index), this.f_air);
+        end
         function Dg = jumpJacobian(this, x)
             % Jacobian of jumpMap: g(x) = [0; -lambda*v + mu].
             Dg = [0, 0; 0, -this.lambda];
@@ -80,33 +88,13 @@ classdef BouncingBallSubSystemClass < HybridSubsystem
             % Jacobian of the output y = height.
             H = [1, 0];
         end
+    end
 
-        function S = saltationMatrix(this, x)
-            % Saltation matrix of the plant at a jump point x (on the guard).
-            f_minus = this.flowMap(x, 0, 0, 0);
-            f_plus = this.flowMap(this.jumpMap(x, 0, 0, 0), 0, 0, 0);
-            S = saltationMatrix(this.jumpJacobian(x), this.guardGradient(x), f_minus, f_plus);
-        end
-
-        function [Xi, H, Htil] = saltationFactors(this, x)
-            % Parts of the observer error saltation matrices that do not
-            % depend on the jump gain L_d (observer with K = 0):
-            %   M_before = Xi - L_d*H,   M_after = Xi - L_d*Htil
-            f_minus = this.flowMap(x, 0, 0, 0);
-            f_plus = this.flowMap(this.jumpMap(x, 0, 0, 0), 0, 0, 0);
-            gradGuard = this.guardGradient(x);
-            H = this.outputJacobian();
-            Xi = saltationMatrix(this.jumpJacobian(x), gradGuard, f_minus, f_plus);
-            Htil = H + H*(f_plus - f_minus)*gradGuard/(gradGuard*f_minus);
-        end
-
-        function [M_before, M_after] = errorSaltationMatrices(this, x, L_d)
-            % Saltation matrices of the observer error at the plant jump
-            % point x, for an observer with jump gain L_d and K = 0.
-            % M_before: observer jumps before the plant, M_after: after.
-            [Xi, H, Htil] = this.saltationFactors(x);
-            M_before = Xi - L_d*H;
-            M_after = Xi - L_d*Htil;
+    methods (Static)
+        function A = ballFlowJacobian(v, f_air)
+            % Jacobian of [v; -g - sign(v)*f_air*v^2] (also used by
+            % BouncingBallKallmanObserver).
+            A = [0, 1; 0, -2*sign(v)*v*f_air];
         end
     end
 end

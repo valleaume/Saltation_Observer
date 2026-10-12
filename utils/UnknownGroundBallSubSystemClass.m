@@ -1,4 +1,4 @@
-classdef UnknownGroundBallSubSystemClass < HybridSubsystem
+classdef UnknownGroundBallSubSystemClass < HybridSubsystem & SaltationModel
     % Bouncing ball above an UNKNOWN, constant ground height.
     %
     %   x = [x1; x2; x3]   x1 = absolute height, x2 = velocity,
@@ -71,7 +71,15 @@ classdef UnknownGroundBallSubSystemClass < HybridSubsystem
             taustar = 2*this.vStar()/this.g;
         end
 
-        % Derivatives used by the saltation analysis (hardcoded).
+        % Guard and hand-written derivatives (see SaltationModel).
+        function w = guard(~, x)
+            % Height above the ground.
+            w = x(1) - x(3);
+        end
+        function A = flowJacobian(this, x)
+            % Jacobian of flowMap.
+            A = [0, 1, 0; 0, -2*sign(x(2))*x(2)*this.f_air, 0; 0, 0, 0];
+        end
         function Dg = jumpJacobian(this, ~)
             % Jacobian of jumpMap with the convention x1+ = x3 (see NOTE above).
             Dg = [0, 0, 1; 0, -this.lambda, 0; 0, 0, 1];
@@ -80,11 +88,9 @@ classdef UnknownGroundBallSubSystemClass < HybridSubsystem
             % Gradient of the guard omega(x) = x1 - x3.
             gradGuard = [1, 0, -1];
         end
-        function S = saltationMatrix(this, x)
-            % Saltation matrix of the plant at a jump point x (on the guard).
-            f_minus = this.flowMap(x);
-            f_plus = this.flowMap(this.jumpMap(x));
-            S = saltationMatrix(this.jumpJacobian(x), this.guardGradient(x), f_minus, f_plus);
+        function H = outputJacobian(~)
+            % Jacobian of the output y = x1.
+            H = [1, 0, 0];
         end
     end
 end
