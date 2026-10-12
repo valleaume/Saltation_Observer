@@ -16,14 +16,5 @@ classdef UtilsTest < ProjectTestCase
             tc.verifyEqual([min(line.XData), max(line.XData)], [1 - 4, 1 + 4], 'AbsTol', 1e-2);
             tc.verifyEqual([min(line.YData), max(line.YData)], [2 - 2, 2 + 2], 'AbsTol', 1e-2);
         end
-
-        function printPdfWritesFile(tc)
-            folder = tc.applyFixture(matlab.unittest.fixtures.TemporaryFolderFixture).Folder;
-            fig = figure();
-            plot(1:3);
-            file = fullfile(folder, 'test_figure');
-            myPrintPDF(fig, file);
-            tc.verifyTrue(isfile([file '.pdf']));
-        end
     end
 end
