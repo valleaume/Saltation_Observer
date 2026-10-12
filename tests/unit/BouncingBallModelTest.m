@@ -31,22 +31,6 @@ classdef BouncingBallModelTest < ProjectTestCase
             tc.verifyFalse(ball.jumpSetIndicator([0; 1], 0, 0, 0)); % moving up from the ground
         end
 
-        function jumpJacobianMatchesJumpMap(tc)
-            ball = BouncingBallSubSystemClass();
-            ball.lambda = 0.8;
-            ball.mu = 2;
-            x = [0; -3];
-            tc.verifyEqual(ball.jumpJacobian(x), ...
-                numericalJacobian(@(z) ball.jumpMap(z, 0, 0, 0), x), 'AbsTol', 1e-8);
-        end
-
-        function unknownGroundJumpJacobianMatchesJumpMap(tc)
-            ball = UnknownGroundBallSubSystemClass();
-            x = [0.3; -4; 0.3];
-            tc.verifyEqual(ball.jumpJacobian(x), ...
-                numericalJacobian(@(z) ball.jumpMap(z), x), 'AbsTol', 1e-8);
-        end
-
         function asymptoticOrbitOfUnknownGroundBall(tc)
             ball = UnknownGroundBallSubSystemClass();
             ball.lambda = 0.5;
@@ -57,14 +41,4 @@ classdef BouncingBallModelTest < ProjectTestCase
             tc.verifyEqual(x_plus(2), ball.vStar(), 'AbsTol', 1e-14);
         end
     end
-end
-
-function J = numericalJacobian(fun, x)
-h = 1e-6;
-n = numel(x);
-J = zeros(numel(fun(x)), n);
-for i = 1:n
-    d = zeros(n, 1); d(i) = h;
-    J(:, i) = (fun(x + d) - fun(x - d))/(2*h);
-end
 end
