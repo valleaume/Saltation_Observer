@@ -63,7 +63,7 @@ legacy/                       superseded scripts kept for reference
 | $L_c$ | flow gain of the observer | `BouncingBallObserver.L_c` |
 | $L_d$ | jump gain of the observer | `BouncingBallObserver.L_d` |
 | $K$ | correction of the observer jump set, $\hat x + K(y - h(\hat x))$; $K_1 < 0.5$ is needed for transversality | `BouncingBallObserver.K` |
-| $S$ | saltation matrix of the plant, $S = Dg + (f^+ - Dg\, f^-)\nabla h / (\nabla h\, f^-)$ | `utils/saltationMatrix.m`, `BouncingBallSubSystemClass.saltationMatrix` |
+| $S$ | saltation matrix of the plant, $S = Dg + (f^+ - Dg\, f^-)\nabla h / (\nabla h\, f^-)$ | `utils/saltationMatrixFromDerivatives.m`, `SaltationModel.saltationMatrix` |
 | $M_{\rm before}$, $M_{\rm after}$ | error saltation matrices when the observer jumps before / after the plant ($K = 0$) | `BouncingBallObserver.saltationMatrices`, `BouncingBallSubSystemClass.errorSaltationMatrices`, `UnknownGroundBallObserver.saltationMatrices` |
 
 The Jacobian of the jump map and the gradient of the guard are written by

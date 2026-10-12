@@ -7,12 +7,3 @@
 No_subsystem
 figures
 data
-
-# Simulink cache
-*.slxc
-# LaTeX build artifacts
-*.aux
-*.log
-*.fls
-*.fdb_latexmk
-*.synctex.gz
