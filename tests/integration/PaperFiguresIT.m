@@ -7,8 +7,7 @@ classdef (TestTags = {'Integration'}) PaperFiguresIT < ProjectTestCase
             folder = tc.applyFixture(matlab.unittest.fixtures.TemporaryFolderFixture).Folder;
             cdc_folder = fullfile(folder, 'CDC');
             mkdir(fullfile(folder, 'TAC'));
-            runScriptIn(fullfile(tc.ProjectFolder, 'draw_figures_CDC_PDF.m'), ...
-                struct('figures_folder', cdc_folder));
+            draw_figures_CDC_PDF(cdc_folder);
 
             expected = {'Miss_jump', 'Miss_jump_x', 'Miss_jump_v', 'Position error', ...
                 'Velocity error', 'Norm_error', 'Norm_error_stable_no_mask', 'Position_synchronization'};
@@ -18,8 +17,7 @@ classdef (TestTags = {'Integration'}) PaperFiguresIT < ProjectTestCase
 
         function tacFigures(tc)
             folder = tc.applyFixture(matlab.unittest.fixtures.TemporaryFolderFixture).Folder;
-            runScriptIn(fullfile(tc.ProjectFolder, 'draw_figures_TAC_PDF.m'), ...
-                struct('figures_folder', folder));
+            draw_figures_TAC_PDF(folder);
 
             expected = {'covariance_error_before_first_jump', 'covariance_error_after_first_jump'};
             for profile = {'AfterBeforeContracting', 'BeforeContracting'}

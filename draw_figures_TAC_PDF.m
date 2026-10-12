@@ -1,3 +1,4 @@
+function draw_figures_TAC_PDF(figures_folder)
 %% draw_figures_TAC_PDF - Generate and export observer-analysis figures
 %
 % Runs the two observer plotting scripts and saves their figures as PDFs in
@@ -6,8 +7,9 @@
 
 project_folder = setupPaths();
 
-% Output folder (can be overridden by defining figures_folder beforehand)
-if ~exist('figures_folder', 'var'), figures_folder = fullfile(project_folder, 'figures', 'TAC'); end
+if nargin == 0 || isempty(figures_folder)
+    figures_folder = fullfile(project_folder, 'figures', 'TAC');
+end
 if ~isfolder(figures_folder)
     mkdir(figures_folder);
 end
@@ -32,3 +34,5 @@ for profile_index = 1:numel(gain_profiles)
 end
 
 fprintf('Observer figures exported to %s\n', figures_folder);
+
+end

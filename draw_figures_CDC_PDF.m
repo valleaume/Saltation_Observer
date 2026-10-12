@@ -1,8 +1,10 @@
+function draw_figures_CDC_PDF(figures_folder)
 project_folder = setupPaths();
 close all;
 
-% Output folder (can be overridden by defining figures_folder beforehand)
-if ~exist('figures_folder', 'var'), figures_folder = fullfile(project_folder, 'figures', 'CDC'); end
+if nargin == 0 || isempty(figures_folder)
+    figures_folder = fullfile(project_folder, 'figures', 'CDC');
+end
 if ~isfolder(figures_folder)
     mkdir(figures_folder);
 end
@@ -278,3 +280,5 @@ cf.CurrentAxes.XLim = [0, 16];
 cf.CurrentAxes.YLim = [-0.5, 11];
 
 myPrintPDF(cf, fullfile(figures_folder, 'Position_synchronization'));
+
+end
