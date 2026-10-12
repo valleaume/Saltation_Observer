@@ -18,7 +18,7 @@ end
 
 project_folder = setupPaths();
 tests_folder = fullfile(project_folder, 'tests');
-addpath(fullfile(tests_folder, 'helpers'));
+addpath(genpath(fullfile(tests_folder, 'helpers')));
 
 switch lower(scope)
     case 'unit'
