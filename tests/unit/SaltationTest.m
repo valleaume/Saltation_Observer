@@ -3,20 +3,20 @@ classdef SaltationTest < ProjectTestCase
     % from the papers, and an independent check by finite differences.
 
     methods (Test)
-        % ---- generic formula utils/saltationMatrix.m ----
+        % ---- generic formula utils/saltationMatrixFromDerivatives.m ----
         function scalarCase(tc)
             % 1D: S = a + (c - a*b)/b = c/b
-            tc.verifyEqual(saltationMatrix(0.3, 1, -2, 5), 5/-2, 'AbsTol', 1e-14);
+            tc.verifyEqual(saltationMatrixFromDerivatives(0.3, 1, -2, 5), 5/-2, 'AbsTol', 1e-14);
         end
 
         function errorWhenFlowTangentToGuard(tc)
-            tc.verifyError(@() saltationMatrix(eye(2), [1, 0], [0; 1], [1; 1]), ...
-                'saltationMatrix:notTransverse');
+            tc.verifyError(@() saltationMatrixFromDerivatives(eye(2), [1, 0], [0; 1], [1; 1]), ...
+                'saltationMatrixFromDerivatives:notTransverse');
         end
 
         function identityWhenJumpIsIdentityAndFlowContinuous(tc)
             f = [-1; 2];
-            tc.verifyEqual(saltationMatrix(eye(2), [1, 0], f, f), eye(2), 'AbsTol', 1e-14);
+            tc.verifyEqual(saltationMatrixFromDerivatives(eye(2), [1, 0], f, f), eye(2), 'AbsTol', 1e-14);
         end
 
         function jumpJacobianConventionDoesNotMatter(tc)
@@ -28,7 +28,7 @@ classdef SaltationTest < ProjectTestCase
             x = [0; -3];
             f_minus = ball.flowMap(x, 0, 0, 0);
             f_plus = ball.flowMap(ball.jumpMap(x, 0, 0, 0), 0, 0, 0);
-            S_old = saltationMatrix([1, 0; 0, -0.8], [1, 0], f_minus, f_plus);
+            S_old = saltationMatrixFromDerivatives([1, 0; 0, -0.8], [1, 0], f_minus, f_plus);
             tc.verifyEqual(ball.saltationMatrix(x), S_old, 'AbsTol', 1e-14);
         end
 

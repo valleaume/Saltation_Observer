@@ -35,7 +35,7 @@ classdef (Abstract) SaltationModel < handle
             f_plus = this.flowMap(this.jumpMap(x, 0, 0, 0), 0, 0, 0);
             gradGuard = this.guardGradient(x);
             H = this.outputJacobian();
-            Xi = saltationMatrix(this.jumpJacobian(x), gradGuard, f_minus, f_plus);
+            Xi = saltationMatrixFromDerivatives(this.jumpJacobian(x), gradGuard, f_minus, f_plus);
             Htil = H + H*(f_plus - f_minus)*gradGuard/(gradGuard*f_minus);
         end
 

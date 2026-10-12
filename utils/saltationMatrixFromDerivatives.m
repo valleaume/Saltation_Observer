@@ -1,7 +1,7 @@
-function S = saltationMatrix(Dg, gradGuard, f_minus, f_plus)
-% SALTATIONMATRIX - Saltation matrix of a hybrid system at a jump point
+function S = saltationMatrixFromDerivatives(Dg, gradGuard, f_minus, f_plus)
+% SALTATIONMATRIXFROMDERIVATIVES - Compute a saltation matrix from its factors.
 %
-%   S = saltationMatrix(Dg, gradGuard, f_minus, f_plus)
+%   S = saltationMatrixFromDerivatives(Dg, gradGuard, f_minus, f_plus)
 %
 % For a jump triggered when the guard h(x) = 0 is reached, with jump map g
 % and flow map f, the saltation matrix maps a perturbation just before the
@@ -19,7 +19,7 @@ function S = saltationMatrix(Dg, gradGuard, f_minus, f_plus)
 
 transversality = gradGuard*f_minus;
 if abs(transversality) < 1e-12
-    error('saltationMatrix:notTransverse', ...
+    error('saltationMatrixFromDerivatives:notTransverse', ...
         'Flow is tangent to the guard (gradGuard*f = %g): saltation matrix undefined.', transversality);
 end
 
