@@ -118,22 +118,6 @@ jspan   = [0, 200];
 sol = sys.solve(x0_cell, tspan, jspan, config);
 sol
 
-%% Who jumps first
-ball_sol = sol('Ball');
-observer_sol = sol('Observer');
-mask_jump_after = (ball_sol.j - observer_sol.j) > 0;
-mask_jump_before = (ball_sol.j - observer_sol.j) < 0;
-synchronized_mask = (ball_sol.j == observer_sol.j);
-sign_jump = zeros(1, length(mask_jump_after));
-for i = 2:length(mask_jump_after)
-    if mask_jump_before(i),
-        sign_jump(i) = -1;
-    elseif mask_jump_after(i),
-        sign_jump(i) = +1;
-    else,                  
-        sign_jump(i) = sign_jump(i-1);
-    end
-end
 
 %% Figure 1 : states
 figure(1)
@@ -156,6 +140,37 @@ xlabel('$t$','Interpreter','latex');
 ylabel('$x_3$','Interpreter','latex');
 legend('true ground height','estimate','Location','best', 'Location', 'northeast', 'Interpreter', 'latex', 'Box', 'off');
 title('Ground height is corrected only at jumps');
+
+
+%% Solve again with a different initial error 
+
+if strcmp(gainProfile, 'AfterBeforeContracting')
+    theta0  = [-0.526; 0.848; -0.056];  
+    theta0 = theta0/norm(theta0);
+    eps0    = 5e-2;
+    tspan   = [0, 14];
+    xhat0   = x0 + eps0*theta0;
+    x0_cell = {x0; xhat0};
+    sol = sys.solve(x0_cell, tspan, jspan, config);
+end
+
+%% Who jumps first
+ball_sol = sol('Ball');
+observer_sol = sol('Observer');
+mask_jump_after = (ball_sol.j - observer_sol.j) > 0;
+mask_jump_before = (ball_sol.j - observer_sol.j) < 0;
+synchronized_mask = (ball_sol.j == observer_sol.j);
+sign_jump = zeros(1, length(mask_jump_after));
+for i = 2:length(mask_jump_after)
+    if mask_jump_before(i),
+        sign_jump(i) = -1;
+    elseif mask_jump_after(i),
+        sign_jump(i) = +1;
+    else,                  
+        sign_jump(i) = sign_jump(i-1);
+    end
+end
+
 
 %% Figure 4 : who jumps first
 figure(4)
