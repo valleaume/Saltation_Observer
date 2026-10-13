@@ -11,10 +11,8 @@
 % through the jumps.  This makes the flow/jump splitting of Corollary 1 bite
 % hard, and (see README) Corollary 1 appears infeasible here while Theorem 1
 % still applies via the product condition.
-%
-% UNTESTED: this script has not been run.  Debug before trusting it.
 
-addpath('utils');
+setupPaths();
 close all;
 
 %% Plant

@@ -1,104 +1,71 @@
 # Saltation_Observer
-Work in progress for Hybrid Observer showing the impact of the saltation matrices on a linear observer. We show the importance of the transversality hypothesis alongside the contractivness of two matrices : $M_{\rm before}$ and $M_{\rm after}$. 
+Hybrid observers with **unknown jump times**: when the observer and the plant
+do not jump together, the estimation error is driven by the saltation matrices
+$M_{\rm before}$ and $M_{\rm after}$. The code illustrates why transversality and
+the contraction of both matrices matter.
 
-Related paper : [Saltation-Based analysis of estimation error in observers for hybrid systems with unknown jump times](https://ieeexplore.ieee.org/document/11312843)
+Papers: [CDC](https://ieeexplore.ieee.org/document/11312843) ([HAL](https://hal.parisnanterre.fr/ENSMP_CAS/hal-05273106)), and its journal version (TAC).
 
-## Requirements
-Requires MATLAB 2024b or higher, the [Hybrid Equations Toolbox](https://mathworks.com/matlabcentral/fileexchange/41372-hybrid-equations-toolbox) package.
-
-## Repository Overview
-
-The repository is organized around hybrid bouncing-ball observer examples and
-the analysis of their flow and jump error dynamics.
-
-- `observers.m` is the main known-ground observer example.
-- `draw_figures.m` reproduces and exports the figures associated with the conference [paper](https://hal.parisnanterre.fr/ENSMP_CAS/hal-05273106).
-- `observersCovarianceDataGeneration.m`, and
-	`observersCovariancePlots.m` form the modular covariance-analysis workflow.
-	Configuration, data generation, and plotting are kept separate so plots can
-	be regenerated without rerunning the simulations.
-- `print_observer_figures.m` runs selected observer plotting scripts and exports
-	their figures as PDFs.
-- `UnknownGroundObserver.m` is a separate unknown-ground example described
-	below.
-- `utils/` contains the hybrid-system classes, observer implementations,
-	plotting helpers, solver-related utilities, and PDF-export functions used by
-	the scripts.
-- `data/` contains generated `.mat` datasets and saved configuration files.
-- `figures/` contains generated figures, PDFs, and other paper artwork.
-- `Examples/` contains other exploratory or standalone work. These files are
-	useful for experiments and demonstrations, but are not required for the
-	main observer or covariance workflows described here.
-
-The repository also contains search and analysis scripts such as
-`JSR_LMI_search.m`, `K_search_LMI.m`, `K_search_naive.m`, `K_search_YALMIP.m`. They investigate observer gains and contraction or joint
-spectral-radius conditions using different numerical approaches.
-
-## Unknown-Ground Observer
-
-`UnknownGroundObserver.m` studies a bouncing ball whose ground height is
-unknown to the observer. The augmented state is
-
-```text
-x = [height; velocity; ground height]
-```
-
-The observer estimates all three quantities from the measured absolute
-position. During continuous flow, the ground-height state is constant and
-does not appear in the measured dynamics, so its error cannot be corrected by
-the flow gain. Information about the ground height arrives through the impact
-events, which makes this script a useful example of jump-driven estimation
-and of the difference between flow and jump observability.
-
-The script configures an `UnknownGroundBallSubSystem` and an
-`UnknownGroundBallObserver`, simulates their coupled system, and plots the
-resulting states, estimation errors, and a Lyapunov-type contraction measure.
-
-## Reproducing and Exporting Figures
-
-Run the scripts from the repository root in MATLAB. Both scripts add the
-`utils` folder to the MATLAB path and create their output folder if needed.
-
-### `draw_figures.m`
-
-Run:
+## Getting started
+Requires MATLAB R2024b or later and the
+[Hybrid Equations Toolbox](https://mathworks.com/matlabcentral/fileexchange/41372-hybrid-equations-toolbox).
 
 ```matlab
-run('draw_figures.m')
+setupPaths              % add the project folders to the path
+draw_figures_CDC_PDF    % CDC figures     -> figures/CDC
+draw_figures_TAC_PDF    % journal figures -> figures/TAC
+runTests                % automatic tests
 ```
 
-This script simulates the bouncing-ball observer examples and exports the
-figures to `figures/CDC` as PDFs. It generates the phase, position, velocity,
-observer-error, norm-error, and synchronization figures. The system gains,
-initial conditions, time spans, and output folder can be edited at the top of
-the script or in the corresponding plotting sections.
+| Folder | Content |
+|---|---|
+| `BouncingBall/` | bouncing ball with known ground, covariance analysis |
+| `BouncingBallUnknownHeight/` | bouncing ball above an unknown ground |
+| `utils/` | system and observer classes, gain searches, helpers |
+| `tests/` | unit and integration tests |
+| `data/` | datasets  |
 
-### `draw_paper_figures.m`
+## Unknown ground height
+`BouncingBallUnknownHeight/UnknownGroundObserver.m` estimates
+`x = [height; velocity; ground height]` from the height only. The ground height
+cannot be corrected during flow: all its information comes from the impacts.
+Set `gainProfile` to `'AfterBeforeContracting'` (both saltation products
+contract) or `'BeforeContracting'` before running it. Together with the
+covariance figures, it makes up `draw_figures_TAC_PDF.m`.
 
-This script exports the observer and covariance figures used in the paper.
-Run:
+## Bouncing ball
+`draw_figures_CDC_PDF.m` produces the CDC figures
+(missed jumps, errors, synchronized case).`BouncingBall/observersBouncingBall.m` compares a Kalman observer with and
+without saltation correction. 
 
-```matlab
-run('draw_paper_figures.m')
-```
+### Examples of interest for the bouncing ball
 
-It first runs `observersCovariancePlots.m`, which loads the dataset selected by
-`data_to_load` near the top of that script and exports the before/after
-covariance error figures. It then runs `UnknownGroundObserver.m` and exports
-the unknown-ground observer figures. All PDFs are written to `figures/TAC`.
-
-To use another covariance dataset, change `data_to_load` in
-`observersCovariancePlots.m` and make sure the corresponding `.mat` file is in
-the `data/` folder. The covariance data must already have been generated by
-`observersCovarianceDataGeneration.m` or supplied in the repository.
-
-## Examples of interest for the bouncing ball
-
-Every computations are made with $x_0 = [5, 2]^\top$.
-- Current numerical values $L_c = [0.8, 0.6]^\top, L_d = [0.1, 0.1]^\top, K = [0; 0]^\top$ provide an illustration of local stability of the observer design when all conditions are met. Observer initialized at $\hat{x}_0 = 0.4x_0$.
-- $L_c = [0, 0]^\top, L_d = [1, -0.392]^\top$ provide an example of adequate gains for synchronized jumps ($K = [1; 0]^\top, \hat{x}_0 = (1+6.10^{-1})x_0$) that ceases to work for unknown jump time ($K = [0; 0]^\top, \hat{x}_0 = (1+6.10^{-3})x_0$).  $L_d$ was found using the LMI search adapted to the synchronized case. 
+Every computation is made with $x_0 = [5, 2]^\top$.
+- $L_c = [0.8, 0.6]^\top, L_d = [0.1, 0.1]^\top, K = [0; 0]^\top$ illustrate local stability of the observer design when all conditions are met. Observer initialized at $\hat{x}_0 = 0.4x_0$.
+- $L_c = [0, 0]^\top, L_d = [1, -0.392]^\top$ are adequate gains for synchronized jumps ($K = [1; 0]^\top, \hat{x}_0 = (1+6.10^{-1})x_0$) that cease to work for unknown jump times ($K = [0; 0]^\top, \hat{x}_0 = (1+6.10^{-3})x_0$). $L_d$ was found using the LMI search adapted to the synchronized case.
 - $L_c = [10, 25]^\top, L_d = [0, 0]^\top, K = [3; 0]^\top$ show what happens when transversality of the observer is not met. Observer initialized at $\hat{x}_0 = (1-6.10^{-2})x_0$.
 - $L_c = [0.1, 0.25]^\top, L_d = [0.1, 0.1]^\top, K = [0; 0]^\top$ show what happens when only $M_{\rm before}$ is contracting and not $M_{\rm after}$. Observer initialized at $\hat{x}_0 = (1-6.10^{-4})x_0$.
 
 > [!NOTE]
-> The same gains have been used in the different figures but not necessarily the same starting positions, they have been scaled in order to fit on the same figure. 
+> The same gains have been used in the different figures but not necessarily the same starting positions, they have been scaled in order to fit on the same figure.
+
+### Covariance analysis
+Monte-Carlo propagation of random initial errors through the first jump,
+compared with the covariance predicted by $M_{\rm before}$ and $M_{\rm after}$:
+`observersCovarianceDataGeneration.m` (slow, writes `data/*.mat`), then
+`observersCovariancePlots.m`. See [docs/covariance_workflow.md](docs/covariance_workflow.md).
+
+## Gain searches
+Gains making $M_{\rm before}$ and $M_{\rm after}$ contracting:
+`utils/K_search_naive.m` (grid search, very long),
+`BouncingBallUnknownHeight/JSR_LMI_search.m` (needs [YALMIP](https://yalmip.github.io/) and an SDP solver)
+and `utils/K_search_LMI.m` (needs the Robust Control Toolbox).
+None of them is needed for the figures.
+
+
+
+## Tests
+`runTests` runs everything (~3 min), `runTests('unit')` only the fast tests
+(~30 s); from a terminal, `matlab -batch "runTests"`. The integration tests
+run the scripts and compare their results with the values of the papers.
+Tests needing a missing toolbox are skipped.

@@ -1,13 +1,15 @@
-%% draw_paper_figures - Generate and export observer-analysis figures
+function draw_figures_TAC_PDF(figures_folder)
+%% draw_figures_TAC_PDF - Generate and export observer-analysis figures
 %
 % Runs the two observer plotting scripts and saves their figures as PDFs in
 % the figures folder. The covariance dataset is selected in
 % observersCovariancePlots.m.
 
-project_folder = fileparts(mfilename('fullpath'));
-addpath(fullfile(project_folder, 'utils'));
+project_folder = setupPaths();
 
-figures_folder = fullfile(project_folder, 'figures', 'TAC');
+if nargin == 0 || isempty(figures_folder)
+    figures_folder = fullfile(project_folder, 'figures', 'TAC');
+end
 if ~isfolder(figures_folder)
     mkdir(figures_folder);
 end
@@ -32,3 +34,5 @@ for profile_index = 1:numel(gain_profiles)
 end
 
 fprintf('Observer figures exported to %s\n', figures_folder);
+
+end

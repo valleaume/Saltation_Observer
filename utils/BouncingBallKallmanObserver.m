@@ -53,7 +53,7 @@ classdef BouncingBallKallmanObserver < HybridSubsystem
             f = [v; -this.g - sign(v) * this.f_air*v^2];
 
             % define matrices
-            F = [0, 1; 0, -2*sign(v)*v*this.f_air];
+            F = BouncingBallSubSystemClass.ballFlowJacobian(v, this.f_air);
             H = [1, 0];
             R_c_inv = eye(1)/this.gain;
 
