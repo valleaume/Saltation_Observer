@@ -1,4 +1,4 @@
-function saveConfigToFile(sys_ball, sys_obs, sys_obs_ref, config, filename)
+function filepath = saveConfigToFile(sys_ball, sys_obs, sys_obs_ref, config, filename, config_dir)
 % SAVECONFIGTOFILE - Save configuration parameters to a readable text file
 %
 % This function extracts all relevant configuration parameters from the
@@ -15,12 +15,15 @@ function saveConfigToFile(sys_ball, sys_obs, sys_obs_ref, config, filename)
 %   sys_obs_ref   - BouncingBallKallmanObserver
 %   config        - HybridSolverConfig
 %   filename      - Base name for the config file (without extension or timestamp)
+%   config_dir    - (optional) output folder, defaults to <project>/data/config
 %
 % Output:
-%   Saves a timestamped .txt file to data/config/ directory
+%   filepath      - path of the timestamped .txt file written in config_dir
 
     % Create config directory if it doesn't exist
-    config_dir = 'data/config';
+    if nargin < 6
+        config_dir = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'data', 'config');
+    end
     if ~exist(config_dir, 'dir')
         mkdir(config_dir);
     end

@@ -21,10 +21,7 @@ sys_obs.f_air = sys_ball.f_air;
 
 % BEWARE : only true for no air friction
 F = [0, 1; 0, 0];
-J = [1, 0; 0, -sys_ball.lambda];
-
-H = [1, 0];
-w = [1; 0];
+H = sys_ball.outputJacobian();
 tau = 15.6718 - 13.6045;
 x = [0; -10.0995];
 
@@ -50,8 +47,7 @@ for ld_1 = -5:0.01:5
                 end
                 sys_obs.L_c = [lc_1; lc_2];
                 sys_obs.L_d = [ld_1; ld_2]; 
-                M_before = J - sys_obs.L_d*H - (J*sys_ball.flowMap(x, 0, 0, 0) - sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) )/x(2)*w';
-                M_after = M_before - sys_obs.L_d*H*(sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) - sys_ball.flowMap(x, 0, 0, 0))/x(2)*w';
+                [M_before, M_after] = sys_ball.errorSaltationMatrices(x, sys_obs.L_d);
                 if all(abs(eig(M_after*expm((F - sys_obs.L_c*H)*tau))) <= 1)
                     if all(abs(eig(M_before*expm((F - sys_obs.L_c*H)*tau))) <= 1)
                         if any(abs(eig( (M_before + sys_obs.L_d*H)*expm((F - sys_obs.L_c*H)*tau))) > 1)

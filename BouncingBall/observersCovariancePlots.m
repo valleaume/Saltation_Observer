@@ -8,12 +8,15 @@
 %   - Ellipse plots of error distributions
 %
 % Requires data to be pre-generated via observersCovarianceDataGeneration.m
+% The settings below can be overridden by defining the variable before
+% running the script (used by the pipeline and the tests).
 
-addpath('utils');
+project_folder = setupPaths();
 close all;
 
 % ====== USER CONFIGURATION ======
-data_to_load = 'raw-bouncing-ball-after-before-05-Mar-2026.mat';  % Data file to analyze
+if ~exist('data_to_load', 'var'), data_to_load = 'raw-bouncing-ball-after-before-05-Mar-2026.mat'; end  % Data file to analyze
+if ~exist('data_folder', 'var'),  data_folder = fullfile(project_folder, 'data'); end
 
 
 % ====== LOAD SYSTEM CONFIGURATION ======
@@ -21,8 +24,8 @@ data_to_load = 'raw-bouncing-ball-after-before-05-Mar-2026.mat';  % Data file to
 
 
 % ====== LOAD DATA ======
-fprintf('Loading data from: data/%s\n', data_to_load);
-dataset = load("data/"+data_to_load);
+fprintf('Loading data from: %s\n', fullfile(data_folder, data_to_load));
+dataset = load(fullfile(data_folder, data_to_load));
 data_x = dataset.data_x;
 data_v = dataset.data_v;
 data_x_ref = dataset.data_x_ref;
@@ -158,17 +161,9 @@ ylim([0, 1]);
 
 %% ====== SALTATION MATRIX ANALYSIS - FIRST JUMP ======
 
-F = [0, 1; 0, 0];
-J = [1, 0; 0, -sys_ball.lambda];
+x = [0; -4.85];   % Plant state at the first impact
 
-H = [1, 0];
-w = [1; 0];
-
-x = [0; -4.85];
-y = 0;
-
-M_before = J - sys_obs.L_d*H - (J*sys_ball.flowMap(x, 0, 0, 0) - sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) )/(w'*sys_ball.flowMap(x, 0, 0, 0))*w';
-M_after = M_before - sys_obs.L_d*H*(sys_ball.flowMap(sys_ball.jumpMap(x, 0, 0, 0), 0, 0, 0) - sys_ball.flowMap(x, 0, 0, 0))/(w'*sys_ball.flowMap(x, 0, 0, 0))*w';
+[M_before, M_after] = sys_obs.saltationMatrices(x);
 
 fprintf('\n======== SALTATION MATRIX ANALYSIS ========\n');
 fprintf('M_before:\n');

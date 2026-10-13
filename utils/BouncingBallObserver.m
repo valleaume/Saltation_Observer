@@ -69,7 +69,30 @@ classdef BouncingBallObserver < HybridSubsystem
             h_c = x_c(1);
             v_c = x_c(2);
             % Set 'inD' to 1 if 'hat{x} + K(y-h(x))' is in the jump set and to 0 otherwise.
-            inD = (h_c <= 0) && (v_c <= 0); % We choose h <= 0 insead of h == 0 in order to better detect jumps. 
+            inD = (h_c <= 0) && (v_c <= 0); % We choose h <= 0 insead of h == 0 in order to better detect jumps.
+        end
+
+        function plant = nominalPlant(this)
+            % Plant model with the same physical parameters as the observer.
+            plant = BouncingBallSubSystemClass();
+            plant.g = this.g;
+            plant.lambda = this.lambda;
+            plant.mu = this.mu;
+            plant.f_air = this.f_air;
+        end
+
+        function [M_before, M_after] = saltationMatrices(this, x_jump, L_d)
+            % Saltation matrices of the estimation error at the plant jump
+            % point x_jump (see BouncingBallSubSystemClass.errorSaltationMatrices).
+            % L_d defaults to this.L_d. Only valid for K = 0.
+            if nargin < 3
+                L_d = this.L_d;
+            end
+            if any(this.K)
+                warning('BouncingBallObserver:nonZeroK', ...
+                    'saltationMatrices assumes K = 0, got K = %s.', mat2str(this.K));
+            end
+            [M_before, M_after] = this.nominalPlant().errorSaltationMatrices(x_jump, L_d);
         end
     end
 end

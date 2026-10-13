@@ -15,10 +15,7 @@ data_to_load = 'raw-bouncing-ball-after-before-05-Mar-2026.mat';
 % ====== PHASE 1: DATA GENERATION (if needed) ======
 if GENERATE_POINTS
     fprintf('========== PHASE 1: DATA GENERATION ==========\n');
-    observersCovarianceDataGeneration;
-    % After generation completes, data_to_load should be set to the newly generated file
-    % For now, we use the default filename used in the generation script
-    data_to_load = sprintf('raw-bouncing-ball-covariance-%s.mat', string(datetime("today")));
+    observersCovarianceDataGeneration;   % sets data_to_load to the new file
 else
     fprintf('========== PHASE 1: SKIPPING DATA GENERATION ==========\n');
     fprintf('Using existing data file: %s\n\n', data_to_load);

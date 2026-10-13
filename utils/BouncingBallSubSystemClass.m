@@ -1,4 +1,4 @@
-classdef BouncingBallSubSystemClass < HybridSubsystem
+classdef BouncingBallSubSystemClass < HybridSubsystem & SaltationModel
     % A bouncing ball modeled as a HybridSystem subclass.
 
     % Define variable properties that can be modified.
@@ -64,7 +64,37 @@ classdef BouncingBallSubSystemClass < HybridSubsystem
             v = x(this.velocity_index);
 
             % Set 'inD' to 1 if 'x' is in the jump set and to 0 otherwise.
-            inD = (h <= 0) && (v <= 0); % We choose h <= 0 insead of h == 0 in order to better detect jumps. 
+            inD = (h <= 0) && (v <= 0); % We choose h <= 0 insead of h == 0 in order to better detect jumps.
+        end
+
+        % Guard and hand-written derivatives (see SaltationModel).
+        function w = guard(this, x)
+            % Jump when the height reaches zero.
+            w = x(this.height_index);
+        end
+        function A = flowJacobian(this, x)
+            % Jacobian of flowMap.
+            A = BouncingBallSubSystemClass.ballFlowJacobian(x(this.velocity_index), this.f_air);
+        end
+        function Dg = jumpJacobian(this, x)
+            % Jacobian of jumpMap: g(x) = [0; -lambda*v + mu].
+            Dg = [0, 0; 0, -this.lambda];
+        end
+        function gradGuard = guardGradient(this, x)
+            % Gradient of the guard h(x) = height.
+            gradGuard = [1, 0];
+        end
+        function H = outputJacobian(this)
+            % Jacobian of the output y = height.
+            H = [1, 0];
+        end
+    end
+
+    methods (Static)
+        function A = ballFlowJacobian(v, f_air)
+            % Jacobian of [v; -g - sign(v)*f_air*v^2] (also used by
+            % BouncingBallKallmanObserver).
+            A = [0, 1; 0, -2*sign(v)*v*f_air];
         end
     end
 end
