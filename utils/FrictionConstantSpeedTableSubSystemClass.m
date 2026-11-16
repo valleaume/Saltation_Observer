@@ -187,16 +187,6 @@ classdef FrictionConstantSpeedTableSubSystemClass < HybridSubsystem & SaltationM
                 names{i} = sprintf('%d->%d', edges(i, 1), edges(i, 2));
             end
         end
-
-        function sys = automaton(this)
-            % This plant as a HybridAutomaton, with the same jump sets, next
-            % modes and resets (for SaltationLMI and AutomatonObserver):
-            % frictionAutomaton with the stick-entry threshold mu_d. In slip 2,
-            % z <= mu_d is s' >= 0: the relative velocity comes back to 0
-            % (jumpSetIndicator).
-            sys = FrictionConstantSpeedTableSubSystemClass.frictionAutomaton(this.m, this.k, this.H(), ...
-                @(xi) xi(5));
-        end
     end
 
     methods (Static)
@@ -232,37 +222,6 @@ classdef FrictionConstantSpeedTableSubSystemClass < HybridSubsystem & SaltationM
         function x = randomState()
             % Random state with a valid mode, for DerivativeTest.
             x = [randn(5, 1); randi(3)];
-        end
-        function sys = frictionAutomaton(m, k, H, threshold)
-            % The modes, flows, resets, guards and next modes of the plant as
-            % a HybridAutomaton, the stick entry enabled by threshold(xi):
-            %   slip 2 -> stick when s reaches 0 with z <= threshold(xi),
-            %   slip 1 -> stick when s reaches 0 with z >= -threshold(xi),
-            %   (a direct reversal instead if |z| > mu_s; no jump otherwise)
-            %   stick -> slip 2 / 1 when z reaches +mu_s / -mu_s.
-            % The plant and the observer FrictionConstantSpeedTableObserver
-            % (automaton) have threshold = mu_d. Any threshold strictly
-            % between the stick entry of the orbit, 2*mu_d - mu_s, and mu_s
-            % is an admissible O_D set of Lemma 2 (docs/guard_and_O_D.md).
-            % Every edge gives its O_D: the slip edges the threshold and the
-            % choice between stick and reversal, the breakaways none (@(xi) 1),
-            % so that no edge uses the default (the flow entering the guard).
-            % Edges, in this order: 1 -> 3, 1 -> 2, 2 -> 3, 2 -> 1, 3 -> 2, 3 -> 1.
-            sys = HybridAutomaton(5, 'Output', @(xi) H*xi);
-            for q = 1:3
-                A = FrictionConstantSpeedTableSubSystemClass.modeMatrix(q, m, k);
-                sys.addMode(q, @(xi) A*xi);
-            end
-            s = @(xi) xi(2) - xi(3);                % relative velocity
-            z = @(xi) k*xi(1);                      % force needed to stick
-            R = FrictionConstantSpeedTableSubSystemClass.resetMatrix(2, 3);
-            stick = @(xi) R*xi;                     % v = vb
-            sys.addEdge(1, 3, s, 'OD', @(xi) [xi(4) - z(xi); z(xi) + threshold(xi)], 'Reset', stick);
-            sys.addEdge(1, 2, s, 'OD', @(xi) [z(xi) - xi(4); z(xi) + threshold(xi)]);
-            sys.addEdge(2, 3, @(xi) -s(xi), 'OD', @(xi) [xi(4) + z(xi); threshold(xi) - z(xi)], 'Reset', stick);
-            sys.addEdge(2, 1, @(xi) -s(xi), 'OD', @(xi) [-z(xi) - xi(4); threshold(xi) - z(xi)]);
-            sys.addEdge(3, 2, @(xi) xi(4) - z(xi), 'OD', @(xi) 1);
-            sys.addEdge(3, 1, @(xi) xi(4) + z(xi), 'OD', @(xi) 1);
         end
     end
 end

@@ -133,18 +133,6 @@ classdef FrictionConstantSpeedTableObserver < HybridSubsystem
             c = xhat(5);
         end
 
-        function sys = automaton(this)
-            % The model of this observer as a HybridAutomaton, with its jump
-            % sets Dhat and next modes, for SaltationLMI and AutomatonObserver:
-            % FrictionConstantSpeedTableSubSystemClass.frictionAutomaton with
-            % the stick-entry threshold mudh, the sets of the plant taken at
-            % the estimate. The gains are not in it:
-            % AutomatonObserver(obs.automaton(), L_c, L_d) is this observer
-            % for L_c = {-T*L_c2, L_c2, L_c3} and L_d by edge.
-            sys = FrictionConstantSpeedTableSubSystemClass.frictionAutomaton(this.m, this.k, this.H(), ...
-                @(xi) xi(5));
-        end
-
         function A = flowJacobian(this, xhat)
             A = blkdiag(this.errorFlowMatrix(FrictionConstantSpeedTableSubSystemClass.modeOf(xhat)), 0);
         end
