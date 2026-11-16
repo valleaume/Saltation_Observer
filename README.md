@@ -14,6 +14,7 @@ Requires MATLAB R2024b or later and the
 setupPaths              % add the project folders to the path
 draw_figures_CDC_PDF    % CDC figures     -> figures/CDC
 draw_figures_TAC_PDF    % journal figures -> figures/TAC
+draw_figures_ECC        % ECC figures     -> figures/ECC
 runTests                % automatic tests
 ```
 
@@ -21,6 +22,7 @@ runTests                % automatic tests
 |---|---|
 | `BouncingBall/` | bouncing ball with known ground, covariance analysis |
 | `BouncingBallUnknownHeight/` | bouncing ball above an unknown ground |
+| `FrictionOscillator/` | stick-slip oscillator with unknown friction levels and table speed |
 | `utils/` | system and observer classes, gain searches, helpers |
 | `tests/` | unit and integration tests |
 | `data/` | datasets  |
@@ -32,6 +34,16 @@ cannot be corrected during flow: all its information comes from the impacts.
 Set `gainProfile` to `'AfterBeforeContracting'` (both saltation products
 contract) or `'BeforeContracting'` before running it. Together with the
 covariance figures, it makes up `draw_figures_TAC_PDF.m`.
+
+## Stick-slip friction oscillator
+`FrictionOscillator/FrictionObserver.m` estimates the mass position and
+velocity, the table speed and the static and dynamic friction levels from the
+position only, along the stick-slip orbit of a mass on a spring and a table at
+constant speed. The static level only enters the breakaway guard: it is
+corrected at the jumps only. It makes up `draw_figures_ECC.m` (local
+convergence, in the state and in $\theta^\top P\theta$). The gains come from
+LMIs written directly with YALMIP: `FrictionOscillator/FrictionGains.m` runs
+`FrictionLMI_search.m` and certifies the gains used.
 
 ## Bouncing ball
 `draw_figures_CDC_PDF.m` produces the CDC figures
