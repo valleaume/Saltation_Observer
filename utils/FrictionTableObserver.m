@@ -1,5 +1,5 @@
-classdef FrictionConstantSpeedTableObserver < HybridSubsystem
-    % Constant-gain observer for FrictionConstantSpeedTableSubSystemClass:
+classdef FrictionTableObserver < HybridSubsystem
+    % Constant-gain observer for FrictionTableSubSystemClass:
     % estimates the mass states, the table speed AND both friction levels.
     %
     %   xhat = [xh; vh; vbh; mush; mudh; qh],  input y,  r = y - H*xhat(1:5)
@@ -45,30 +45,30 @@ classdef FrictionConstantSpeedTableObserver < HybridSubsystem
     end
 
     methods
-        function obj = FrictionConstantSpeedTableObserver(measurement)
+        function obj = FrictionTableObserver(measurement)
             if nargin < 1, measurement = 'position'; end
-            FrictionConstantSpeedTableSubSystemClass.outputMatrix(measurement);   % validates
+            FrictionTableSubSystemClass.outputMatrix(measurement);   % validates
             obj = obj@HybridSubsystem(6, 1, 6);
             obj.measurement = measurement;
         end
 
         function xdot = flowMap(this, xhat, y, ~, ~)
-            q = FrictionConstantSpeedTableSubSystemClass.modeOf(xhat);
+            q = FrictionTableSubSystemClass.modeOf(xhat);
             r = y - this.H()*xhat(1:5);
             xdot = [this.flowMatrix(q)*xhat(1:5) + this.flowGain(q)*r; 0];
         end
 
         function xplus = jumpMap(this, xhat, y, ~, ~)
-            q = FrictionConstantSpeedTableSubSystemClass.modeOf(xhat);
+            q = FrictionTableSubSystemClass.modeOf(xhat);
             q_next = this.nextMode(xhat);
             r = y - this.H()*xhat(1:5);
-            R = FrictionConstantSpeedTableSubSystemClass.resetMatrix(q, q_next);
+            R = FrictionTableSubSystemClass.resetMatrix(q, q_next);
             xplus = [R*xhat(1:5) + this.jumpGain(q, q_next)*r; q_next];
         end
 
         function inC = flowSetIndicator(this, xhat, ~, ~, ~)
             [s, z, c] = this.setVariables(xhat);
-            switch FrictionConstantSpeedTableSubSystemClass.modeOf(xhat)
+            switch FrictionTableSubSystemClass.modeOf(xhat)
                 case 1, inC = s >= 0 || z <= -c;
                 case 2, inC = s <= 0 || z >= c;
                 case 3, inC = abs(z) <= xhat(4);
@@ -77,7 +77,7 @@ classdef FrictionConstantSpeedTableObserver < HybridSubsystem
 
         function inD = jumpSetIndicator(this, xhat, ~, ~, ~)
             [s, z, c] = this.setVariables(xhat);
-            switch FrictionConstantSpeedTableSubSystemClass.modeOf(xhat)
+            switch FrictionTableSubSystemClass.modeOf(xhat)
                 case 1, inD = s <= 0 && z >= -c;
                 case 2, inD = s >= 0 && z <= c;
                 case 3, inD = abs(z) >= xhat(4);
@@ -87,23 +87,23 @@ classdef FrictionConstantSpeedTableObserver < HybridSubsystem
 
     methods
         function A = flowMatrix(this, q)
-            A = FrictionConstantSpeedTableSubSystemClass.modeMatrix(q, this.m, this.k);
+            A = FrictionTableSubSystemClass.modeMatrix(q, this.m, this.k);
         end
 
         function H = H(this)
-            H = FrictionConstantSpeedTableSubSystemClass.outputMatrix(this.measurement);
+            H = FrictionTableSubSystemClass.outputMatrix(this.measurement);
         end
 
         function L = flowGain(this, q)
             switch q
-                case 1, L = -FrictionConstantSpeedTableSubSystemClass.T*this.L_c2;
+                case 1, L = -FrictionTableSubSystemClass.T*this.L_c2;
                 case 2, L = this.L_c2;
                 case 3, L = this.L_c3;
             end
         end
 
         function L = jumpGain(this, q, q_next)
-            T = FrictionConstantSpeedTableSubSystemClass.T;
+            T = FrictionTableSubSystemClass.T;
             switch sprintf('%d%d', q, q_next)
                 case '23', L = this.L_d23;
                 case '13', L = -T*this.L_d23;
@@ -111,7 +111,7 @@ classdef FrictionConstantSpeedTableObserver < HybridSubsystem
                 case '31', L = -T*this.L_d32;
                 case '21', L = this.L_d21;      % 0, never used near the orbit
                 case '12', L = -T*this.L_d21;
-                otherwise, error('FrictionConstantSpeedTableObserver:edge', 'No observer jump %d -> %d.', q, q_next);
+                otherwise, error('FrictionTableObserver:edge', 'No observer jump %d -> %d.', q, q_next);
             end
         end
 
@@ -119,7 +119,7 @@ classdef FrictionConstantSpeedTableObserver < HybridSubsystem
             % Same rule as the plant, with the estimated mu_s.
             [~, z] = this.setVariables(xhat);
             mu_s = xhat(4);
-            switch FrictionConstantSpeedTableSubSystemClass.modeOf(xhat)
+            switch FrictionTableSubSystemClass.modeOf(xhat)
                 case 1, q_next = 3 - (z > mu_s);         % stick, or reversal to 2
                 case 2, q_next = 3 - 2*(z < -mu_s);      % stick, or reversal to 1
                 case 3, q_next = 1 + (z > 0);            % breakaway
@@ -134,7 +134,7 @@ classdef FrictionConstantSpeedTableObserver < HybridSubsystem
         end
 
         function A = flowJacobian(this, xhat)
-            A = blkdiag(this.errorFlowMatrix(FrictionConstantSpeedTableSubSystemClass.modeOf(xhat)), 0);
+            A = blkdiag(this.errorFlowMatrix(FrictionTableSubSystemClass.modeOf(xhat)), 0);
         end
 
         function A_F = errorFlowMatrix(this, q)
@@ -147,7 +147,7 @@ classdef FrictionConstantSpeedTableObserver < HybridSubsystem
             % x_jump = [xi; q] (on the guard), x1..x5 block:
             %   Mb = Xi - Ld*H,   Ma = Xi - Ld*Htil
             [Xi, H, Htil] = this.saltationFactors(x_jump);
-            Ld = this.jumpGain(FrictionConstantSpeedTableSubSystemClass.modeOf(x_jump), this.nextMode(x_jump));
+            Ld = this.jumpGain(FrictionTableSubSystemClass.modeOf(x_jump), this.nextMode(x_jump));
             Mb = Xi - Ld*H;
             Ma = Xi - Ld*Htil;
         end
@@ -170,7 +170,7 @@ classdef FrictionConstantSpeedTableObserver < HybridSubsystem
             % the same matrix as with the identity reset, where the timing
             % term (f+ - f-)*w/den = -e2*c gave it. Htil does not involve Dg.
             xi = x_jump(1:5);
-            q = FrictionConstantSpeedTableSubSystemClass.modeOf(x_jump);
+            q = FrictionTableSubSystemClass.modeOf(x_jump);
             q_next = this.nextMode(x_jump);
             [~, z] = this.setVariables(x_jump);
             switch q
@@ -178,12 +178,12 @@ classdef FrictionConstantSpeedTableObserver < HybridSubsystem
                 case 2, w = [0 -1 1 0 0];
                 case 3, w = [-sign(z)*this.k, 0, 0, 1, 0];
             end
-            Dg = FrictionConstantSpeedTableSubSystemClass.resetMatrix(q, q_next);
+            Dg = FrictionTableSubSystemClass.resetMatrix(q, q_next);
             f_minus = this.flowMatrix(q)*xi;
             f_plus = this.flowMatrix(q_next)*Dg*xi;
             den = w*f_minus;
             if abs(den) < 1e-12
-                error('FrictionConstantSpeedTableObserver:notTransverse', 'The flow is tangent to the guard at this jump point.');
+                error('FrictionTableObserver:notTransverse', 'The flow is tangent to the guard at this jump point.');
             end
             H = this.H();
             Xi = Dg + (f_plus - Dg*f_minus)*w/den;
@@ -194,7 +194,7 @@ classdef FrictionConstantSpeedTableObserver < HybridSubsystem
     methods (Static)
         function x = randomState()
             % Random state with a valid mode, for DerivativeTest.
-            x = FrictionConstantSpeedTableSubSystemClass.randomState();
+            x = FrictionTableSubSystemClass.randomState();
         end
     end
 end

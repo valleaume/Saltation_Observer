@@ -1,7 +1,7 @@
-function out = FrictionConstantSpeedLMI_search(varargin)
-% FRICTIONCONSTANTSPEEDLMI_SEARCH  Jump gains of FrictionConstantSpeedTableObserver
+function out = FrictionLMI_search(varargin)
+% FRICTIONLMI_SEARCH  Jump gains of FrictionTableObserver
 % and a quadratic certificate for the error saltation dynamics along the
-% stick-slip orbit, by LMI (same structure as FrictionLMI_search.m).
+% stick-slip orbit, by LMI.
 %
 % Along the orbit 3 -> 2 -> 3 the error sampled at the jumps obeys
 %
@@ -10,8 +10,8 @@ function out = FrictionConstantSpeedLMI_search(varargin)
 %
 % The output is y = x: ydot = v is continuous at the switches, so
 % M_before = M_after at both jumps (for y = v the state is not observable,
-% see FrictionConstantSpeedTableSubSystemClass). As in FrictionLMI_search.m,
-% no single P contracts both steps; we take one matrix per phase:
+% see FrictionTableSubSystemClass).
+% No single P contracts both steps; we take one matrix per phase:
 %
 %     (M23*Phi2)'*P_stick*(M23*Phi2) <= gam*P_slip
 %     (M32*Phi3)'*P_slip*(M32*Phi3)  <= gam*P_stick
@@ -40,10 +40,10 @@ function out = FrictionConstantSpeedLMI_search(varargin)
 % REQUIRES: YALMIP + an SDP solver, Control System Toolbox (obsvf, place).
 %
 % Usage:
-%   out = FrictionConstantSpeedLMI_search();                   % nominal mu_s, mu_d, vb +/- 5%
-%   out = FrictionConstantSpeedLMI_search('rel', 0);           % nominal orbit only
-%   out = FrictionConstantSpeedLMI_search('m', 2, 'k', 0.5);   % other mass and stiffness
-%   out = FrictionConstantSpeedLMI_search('L_c2', Lc2, 'L_c3', Lc3, 'L_d23', Ld23, 'L_d32', Ld32);  % P only
+%   out = FrictionLMI_search();                   % nominal mu_s, mu_d, vb +/- 5%
+%   out = FrictionLMI_search('rel', 0);           % nominal orbit only
+%   out = FrictionLMI_search('m', 2, 'k', 0.5);   % other mass and stiffness
+%   out = FrictionLMI_search('L_c2', Lc2, 'L_c3', Lc3, 'L_d23', Ld23, 'L_d32', Ld32);  % P only
 
 parser = inputParser;
 addParameter(parser, 'mu_s', 0.6);                % nominal static friction
@@ -66,9 +66,9 @@ addParameter(parser, 'verbose', true);
 parse(parser, varargin{:});
 opts = parser.Results;
 
-plant = FrictionConstantSpeedTableSubSystemClass('position');
+plant = FrictionTableSubSystemClass('position');
 plant.m = opts.m;  plant.k = opts.k;
-obs = FrictionConstantSpeedTableObserver('position');
+obs = FrictionTableObserver('position');
 obs.m = opts.m;  obs.k = opts.k;
 H = obs.H();
 

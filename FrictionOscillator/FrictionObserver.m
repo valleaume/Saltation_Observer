@@ -1,4 +1,4 @@
-% FRICTION_CONSTANT_SPEED_OBSERVER
+% FRICTION_OBSERVER
 % Mass on a spring attached to a fixed wall, resting on a table that moves
 % at the constant speed vb, Coulomb friction with UNKNOWN static and dynamic
 % levels mu_s > mu_d. The table speed is UNKNOWN too. Observed from the
@@ -6,7 +6,7 @@
 %
 %   x = [x; v; vb; mu_s; mu_d; q],  q = 1, 2 slip, 3 stick
 %
-% Variant of FrictionObserver.m (vibrating table). The slip always goes in
+% The slip always goes in
 % the same direction, along the orbit stick -> slip 2 -> stick, and three
 % parameters are estimated:
 %   - mu_s only enters the breakaway guard |z| = mu_s: like the ground height
@@ -21,7 +21,7 @@
 % continuous at the switches, so M_before = M_after: a single saltation
 % matrix per jump.
 %
-% Gain profiles (gains and P from FrictionConstantSpeedLMI_search.m, rounded):
+% Gain profiles (gains and P from FrictionLMI_search.m, rounded):
 %   'Both'        L_d certified on M_before = M_after
 %   'NoJumpGain'  L_d = 0: mu_s is not recovered
 
@@ -29,9 +29,9 @@ setupPaths();
 close all;
 
 %% Plant
-sys_plant = FrictionConstantSpeedTableSubSystemClass('position');
+sys_plant = FrictionTableSubSystemClass('position');
 % The gains below are designed for m = k = 1; after changing them, rerun
-% FrictionConstantSpeedLMI_search('m', sys_plant.m, 'k', sys_plant.k).
+% FrictionLMI_search('m', sys_plant.m, 'k', sys_plant.k).
 sys_plant.m = 1;
 sys_plant.k = 1;
 mu_s = 0.6;  mu_d = 0.4;  vb = 0.2;     % true values, unknown to the observer
@@ -39,7 +39,7 @@ orb = sys_plant.periodicOrbit(mu_s, mu_d, vb);
 fprintf('stick-slip orbit: tau_slip = %.4f, tau_stick = %.4f\n', orb.tau_sl, orb.tau_st);
 
 %% Observer
-sys_obs = FrictionConstantSpeedTableObserver('position');
+sys_obs = FrictionTableObserver('position');
 sys_obs.m = sys_plant.m;
 sys_obs.k = sys_plant.k;
 

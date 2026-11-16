@@ -3,7 +3,7 @@ function draw_figures_ECC(figures_folder)
 %
 % Local convergence of the observer of the stick-slip oscillator on a table
 % at constant speed, with unknown table speed and friction levels
-% (FrictionOscillator/FrictionConstantSpeedObserver.m, gain profile 'Both'),
+% (FrictionOscillator/FrictionObserver.m, gain profile 'Both'),
 % from an initial error on every state. Saved as PDFs in the figures folder:
 % the states and the error in each coordinate, and the Lyapunov function
 % theta'*P*theta of the certificate, with the 'big' fonts of myPrintPDF.
@@ -21,7 +21,7 @@ end
 gainProfile = 'Both';
 tspan = [];   % default of the script
 close all;
-run(fullfile(project_folder, 'FrictionOscillator', 'FrictionConstantSpeedObserver.m'));
+run(fullfile(project_folder, 'FrictionOscillator', 'FrictionObserver.m'));
 
 % The states and the estimates during the transient only
 set(findobj(figure(1), 'Type', 'axes'), 'XLim', [0, 12]);

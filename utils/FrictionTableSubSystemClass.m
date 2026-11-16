@@ -1,4 +1,4 @@
-classdef FrictionConstantSpeedTableSubSystemClass < HybridSubsystem & SaltationModel
+classdef FrictionTableSubSystemClass < HybridSubsystem & SaltationModel
     % Mass m on a spring of stiffness k attached to a fixed wall, resting on a
     % table that moves at the constant speed vb, with Coulomb friction whose
     % static and dynamic levels mu_s > mu_d are UNKNOWN. The table speed is
@@ -25,7 +25,7 @@ classdef FrictionConstantSpeedTableSubSystemClass < HybridSubsystem & SaltationM
     % the stick flow keeps until the breakaway back into slip 2 (the orbit
     % never reverses), outside the flow set s <= 0. The saltation matrix keeps
     % its value: the reset carries what the jump timing carried (see
-    % FrictionConstantSpeedTableObserver.saltationFactors).
+    % FrictionTableObserver.saltationFactors).
     %
     % Guard: s (q = 1), -s (q = 2), mu_s - |z| (q = 3). vb enters only the
     % stick-entry guard and mu_s only the breakaway guard.
@@ -49,9 +49,9 @@ classdef FrictionConstantSpeedTableSubSystemClass < HybridSubsystem & SaltationM
     end
 
     methods
-        function obj = FrictionConstantSpeedTableSubSystemClass(measurement)
+        function obj = FrictionTableSubSystemClass(measurement)
             if nargin < 1, measurement = 'position'; end
-            H = FrictionConstantSpeedTableSubSystemClass.outputMatrix(measurement);
+            H = FrictionTableSubSystemClass.outputMatrix(measurement);
             obj = obj@HybridSubsystem(6, 0, 1, @(x) H*x(1:5));
             obj.measurement = measurement;
         end
@@ -85,11 +85,11 @@ classdef FrictionConstantSpeedTableSubSystemClass < HybridSubsystem & SaltationM
     methods
         function A = flowMatrix(this, q)
             % xi' = A_q*xi in mode q (xi = x1..x5).
-            A = FrictionConstantSpeedTableSubSystemClass.modeMatrix(q, this.m, this.k);
+            A = FrictionTableSubSystemClass.modeMatrix(q, this.m, this.k);
         end
 
         function H = H(this)
-            H = FrictionConstantSpeedTableSubSystemClass.outputMatrix(this.measurement);
+            H = FrictionTableSubSystemClass.outputMatrix(this.measurement);
         end
 
         function qn = nextMode(this, x)
@@ -146,7 +146,7 @@ classdef FrictionConstantSpeedTableSubSystemClass < HybridSubsystem & SaltationM
             % the mass at the speed vb up to the breakaway point:
             %   x_b = mu_s/k,  x_e = (2*mu_d - mu_s)/k,  tau_st = (x_b - x_e)/vb,
             %   tau_sl = (pi + 2*alpha)/w,  tan(alpha) = vb*sqrt(k*m)/(mu_s - mu_d)
-            assert(vb > 0 && mu_s > mu_d && mu_d >= 0, 'FrictionConstantSpeedTableSubSystemClass:orbit', ...
+            assert(vb > 0 && mu_s > mu_d && mu_d >= 0, 'FrictionTableSubSystemClass:orbit', ...
                 'The stick-slip orbit needs vb > 0 and mu_s > mu_d >= 0.');
             point = @(x) [x; vb; vb; mu_s; mu_d];     % v = vb at both switches
             xi_e = point((2*mu_d - mu_s)/this.k);
@@ -155,7 +155,7 @@ classdef FrictionConstantSpeedTableSubSystemClass < HybridSubsystem & SaltationM
             tau_sl = (pi + 2*atan(vb*sqrt(this.k*this.m)/(mu_s - mu_d)))/sqrt(this.k/this.m);
             residual = norm(expm(this.flowMatrix(3)*tau_st)*xi_e - xi_b) ...
                 + norm(expm(this.flowMatrix(2)*tau_sl)*xi_b - xi_e);
-            assert(residual < 1e-10, 'FrictionConstantSpeedTableSubSystemClass:orbit', 'The orbit does not close.');
+            assert(residual < 1e-10, 'FrictionTableSubSystemClass:orbit', 'The orbit does not close.');
             orb = struct('xi_e', xi_e, 'xi_b', xi_b, 'tau_st', tau_st, 'tau_sl', tau_sl, ...
                 'z_e', this.k*xi_e(1), 'mu_s', mu_s, 'mu_d', mu_d, 'vb', vb, 'residual', residual);
         end
@@ -173,7 +173,7 @@ classdef FrictionConstantSpeedTableSubSystemClass < HybridSubsystem & SaltationM
                 case '31', x = [this.T*orb.xi_b; 3];
                 case '21', x = [-0.7/this.k; 0.2; 0.2; 0.6; 0.4; 2];
                 case '12', x = [0.7/this.k; -0.2; -0.2; 0.6; 0.4; 1];
-                otherwise, error('FrictionConstantSpeedTableSubSystemClass:edge', 'No jump %d -> %d.', edge(1), edge(2));
+                otherwise, error('FrictionTableSubSystemClass:edge', 'No jump %d -> %d.', edge(1), edge(2));
             end
         end
 
@@ -210,7 +210,7 @@ classdef FrictionConstantSpeedTableSubSystemClass < HybridSubsystem & SaltationM
             switch measurement
                 case 'position', H = [1 0 0 0 0];
                 case 'velocity', H = [0 1 0 0 0];
-                otherwise, error('FrictionConstantSpeedTableSubSystemClass:measurement', ...
+                otherwise, error('FrictionTableSubSystemClass:measurement', ...
                         'measurement must be ''position'' or ''velocity''.');
             end
         end
