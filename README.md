@@ -36,14 +36,10 @@ contract) or `'BeforeContracting'` before running it. Together with the
 covariance figures, it makes up `draw_figures_TAC_PDF.m`.
 
 ## Stick-slip friction oscillator
-`FrictionOscillator/FrictionObserver.m` estimates the mass position and
-velocity, the table speed and the static and dynamic friction levels from the
-position only, along the stick-slip orbit of a mass on a spring and a table at
-constant speed. The static level only enters the breakaway guard: it is
-corrected at the jumps only. It makes up `draw_figures_ECC.m` (local
-convergence, in the state and in $\theta^\top P\theta$). The gains come from
+`FrictionOscillator/FrictionObserver.m` estimates the state $x=(x_1, x_2, v_b, \mu_s, \mu_d)$ of a mass on a conveyor belt (moving at constant speed $v_b$) attached to a spring and subject to dry friction. The static friction coefficient $\mu_s$ is unobservable in every mode. The gains come from
 LMIs written directly with YALMIP: `FrictionOscillator/FrictionGains.m` runs
-`FrictionLMI_search.m` and certifies the gains used.
+`FrictionLMI_search.m` and certifies the gains used. Relevant figures (local
+convergence, error, Lyapunov function) are generated with `draw_figures_ECC.m`.
 
 ## Bouncing ball
 `draw_figures_CDC_PDF.m` produces the CDC figures
