@@ -25,7 +25,11 @@ classdef DerivativeTest < ProjectTestCase
             u = zeros(model.input_dimension, 1);
             rng(0);
             for trial = 1:3
-                x = randn(model.state_dimension, 1);
+                if ismethod(model, 'randomState')
+                    x = model.randomState();   % e.g. a valid discrete mode
+                else
+                    x = randn(model.state_dimension, 1);
+                end
                 exact = callMethod(model, derivative.method, x, u);
                 numeric = numericalJacobian(@(z) callMethod(model, derivative.map, z, u), x);
                 numeric = restrictToDeclared(model, derivative.method, numeric, exact);
